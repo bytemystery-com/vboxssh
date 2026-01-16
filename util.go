@@ -96,9 +96,10 @@ func showInfoDialog() {
 	if ts != "" {
 		tsStr = "Build: " + ts + "\n"
 	}
+	wSize := Gui.MainWindow.Canvas().Size()
 
-	msg := fmt.Sprintf(lang.X("info.msg", "\n%s\n\nVersion: %s  \n%sAuthor: Reiner Pröls\n\nGo version: %s\n\nFyne version: %s\nBuild: %s\nThema: %s\nPrimary color: %s\nScale: %.2f\n\nPlatform: %s\nArchitecture: %s"),
-		n, v, tsStr, vgo, vfyne, build, thema, col, scale, os, arch)
+	msg := fmt.Sprintf(lang.X("info.msg", "\n%s\n\nVersion: %s  \n%sAuthor: Reiner Pröls\n\nGo version: %s\n\nFyne version: %s\nBuild: %s\nThema: %s\nPrimary color: %s\nScale: %.2f\nWindow size: %.0fx%.0f\n\nPlatform: %s\nArchitecture: %s"),
+		n, v, tsStr, vgo, vfyne, build, thema, col, scale, wSize.Width, wSize.Height, os, arch)
 	dialog.ShowInformation(lang.X("info.title", "Info"), msg, Gui.MainWindow)
 }
 

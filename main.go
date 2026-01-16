@@ -410,12 +410,13 @@ func main() {
 	vbox := container.NewBorder(container.NewStack(Gui.ButtonLineBack, Gui.ButtonLine), nil, nil, nil, Gui.DetailsScroll)
 
 	Gui.Split = container.NewHSplit(Gui.Tree, vbox)
-	Gui.Split.Offset = 0.2
+	Gui.Split.Offset = 0.25
 
 	Gui.OuterBorderLayout = container.NewBorder(Gui.Toolbar, Gui.StartusBar, nil, nil, Gui.Split)
 
 	Gui.MainWindow.SetContent(Gui.OuterBorderLayout)
-	Gui.MainWindow.Resize(fyne.NewSize(1200, 700))
+	Gui.MainWindow.Resize(fyne.NewSize(1000, 750))
+	Gui.MainWindow.CenterOnScreen()
 
 	showPasswordDialog(func(pass string) {
 		pass, err := crypt.Encrypt(crypt.InternPassword, pass)
