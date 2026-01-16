@@ -1,0 +1,212 @@
+package util
+
+import (
+	"image/color"
+	"strings"
+
+	"bytemystery-com/vboxssh/vm"
+
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
+	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/lang"
+	"fyne.io/fyne/v2/theme"
+	"fyne.io/fyne/v2/widget"
+	"golang.org/x/crypto/ssh"
+)
+
+func NewFiller(width, height float32) *canvas.Rectangle {
+	filler := canvas.NewRectangle(color.Transparent)
+	filler.SetMinSize(fyne.NewSize(width, height))
+	filler.Refresh()
+	return filler
+}
+
+func NewHFiller(f float32) *canvas.Rectangle {
+	filler := canvas.NewRectangle(color.Transparent)
+	filler.SetMinSize(fyne.NewSize(GetDefaultTextWidth("X")*f, 0))
+	filler.Refresh()
+	return filler
+}
+
+func NewVFiller(f float32) *canvas.Rectangle {
+	filler := canvas.NewRectangle(color.Transparent)
+	filler.SetMinSize(fyne.NewSize(0, GetDefaultTextHeight("X")*f))
+	filler.Refresh()
+	return filler
+}
+
+func GetNumberFilter(w *widget.Entry, f func(string)) func(string) {
+	return func(s string) {
+		filtered := ""
+		for _, r := range s {
+			if r >= '0' && r <= '9' {
+				filtered += string(r)
+			}
+		}
+		if filtered != s {
+			w.SetText(filtered)
+		}
+		if f != nil {
+			f(w.Text)
+		}
+	}
+}
+
+func GetNumberFilterPlusMinus(w *widget.Entry, f func(string)) func(string) {
+	return func(s string) {
+		filtered := ""
+		first := true
+		for _, r := range s {
+			if (r >= '0' && r <= '9') || (first && (r == '-' || r == '+')) {
+				filtered += string(r)
+			}
+			first = false
+		}
+		if filtered != s {
+			w.SetText(filtered)
+		}
+		if f != nil {
+			f(w.Text)
+		}
+	}
+}
+
+func GetDefaultTextWidth(s string) float32 {
+	return fyne.MeasureText(
+		s,
+		theme.TextSize(),
+		fyne.TextStyle{},
+	).Width
+}
+
+func GetDefaultTextHeight(s string) float32 {
+	return fyne.MeasureText(
+		s,
+		theme.TextSize(),
+		fyne.TextStyle{},
+	).Width
+}
+
+func GetDefaultTextSize(s string) fyne.Size {
+	return fyne.MeasureText(
+		s,
+		theme.TextSize(),
+		fyne.TextStyle{},
+	)
+}
+
+func SelectEntryFromProperty(w *widget.Select, v *vm.VMachine, key string, m map[string]int, oldValue *int) {
+	w.ClearSelected()
+	str, ok := v.Properties[key]
+	index := -1
+	if ok {
+		val, ok := m[strings.ToLower(str)]
+		if ok {
+			index = val
+		}
+	}
+	if index >= 0 {
+		w.SetSelectedIndex(index)
+		*oldValue = index
+	} else {
+		w.ClearSelected()
+		*oldValue = -1
+	}
+}
+
+func CheckFromProperty(w *widget.Check, v *vm.VMachine, key string, value string, oldValue *bool) bool {
+	str, ok := v.Properties[key]
+	if ok && strings.ToLower(str) == value {
+		w.SetChecked(true)
+		*oldValue = true
+	} else {
+		w.SetChecked(false)
+		*oldValue = false
+	}
+	return w.Checked
+}
+
+func GetFormWidth() float32 {
+	return fyne.MeasureText(
+		"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+		theme.TextSize(),
+		fyne.TextStyle{},
+	).Width * 2
+}
+
+type WriterFunc func(p []byte) (int, error)
+
+func (f WriterFunc) Write(p []byte) (int, error) {
+	return f(p)
+}
+
+func GetFilename(path string) string {
+	path = strings.ReplaceAll(path, "\\", "/")
+	i := strings.LastIndex(path, "/")
+	if i == -1 {
+		return path
+	}
+	return path[i+1:]
+}
+
+type TruncateType int
+
+const (
+	None TruncateType = iota
+	Begin
+	End
+)
+
+func TruncateText(s string, maxWidth float32, text *canvas.Text, truncate TruncateType) string {
+	if truncate == None {
+		return s
+	}
+	maxWidth -= theme.Padding() * 2
+	ellipsis := "…"
+	ellW := fyne.MeasureText(ellipsis, text.TextSize, text.TextStyle).Width
+
+	r := []rune(s)
+	if fyne.MeasureText(s, text.TextSize, text.TextStyle).Width <= maxWidth {
+		return s
+	}
+
+	for len(r) > 0 {
+		switch truncate {
+		case End:
+			r = r[:len(r)-1]
+		case Begin:
+			r = r[1:]
+		}
+
+		if fyne.MeasureText(string(r), text.TextSize, text.TextStyle).Width+ellW <= maxWidth {
+			switch truncate {
+			case End:
+				return string(r) + ellipsis
+			case Begin:
+				return ellipsis + string(r)
+			}
+		}
+	}
+	return ellipsis
+}
+
+func DebugContainer(obj fyne.CanvasObject, col color.Color) fyne.CanvasObject {
+	if col == nil {
+		col = color.RGBA{255, 0, 0, 65}
+	}
+	bg := canvas.NewRectangle(col)
+	bg.SetMinSize(obj.MinSize())
+
+	return container.NewStack(bg, obj)
+}
+
+func GetServerAddressAsString(s *ssh.Client) string {
+	server := ""
+	if s != nil {
+		server = s.RemoteAddr().String()
+	} else {
+		server = lang.X("filebrowser.server.local", "local")
+	}
+	return server
+}

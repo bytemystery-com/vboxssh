@@ -1,0 +1,12 @@
+[Details]
+Icon = "assets/icons/icon.png"
+Name = "VBoxSsh"
+ID = "com.bytemystery.vboxssh"
+Version = "0.1.0"
+Build = 17
+
+[LinuxAndBSD]
+GenericName = "Virtualbox Frontend"
+Categories = ["System"]
+Comment = "Manage VirtualBox locally and over SSH"
+Keywords = ["virtualbox", "ssh"]
