@@ -34,6 +34,8 @@ const (
 	PREF_TASKS_MAX_ENTRIES_KEY   = "tasks.max_entries"
 	PREF_TASKS_MAX_ENTRIES_VALUE = 15
 
+	PREF_TASKS_FIRST_START_KEY = "firststart"
+
 	PREF_SERVERS_KEY          = "serverlist"
 	PREF_MASTERKEY_TEST_KEY   = "mastertest"
 	PREF_MASTERKEY_TEST_VALUE = "Reiner"
@@ -45,6 +47,7 @@ type Preferences struct {
 	TasksMaxEntries int
 	ServerList      string // json String
 	MasterKeyTest   string
+	FirstStart      bool
 }
 
 func NewPreferences() *Preferences {
@@ -54,6 +57,7 @@ func NewPreferences() *Preferences {
 		TasksMaxEntries: Gui.App.Preferences().IntWithFallback(PREF_TASKS_MAX_ENTRIES_KEY, PREF_TASKS_MAX_ENTRIES_VALUE),
 		ServerList:      Gui.App.Preferences().StringWithFallback(PREF_SERVERS_KEY, ""),
 		MasterKeyTest:   Gui.App.Preferences().StringWithFallback(PREF_MASTERKEY_TEST_KEY, PREF_MASTERKEY_TEST_VALUE),
+		FirstStart:      Gui.App.Preferences().BoolWithFallback(PREF_TASKS_FIRST_START_KEY, true),
 	}
 	return p
 }
@@ -65,4 +69,5 @@ func (p *Preferences) Store() {
 	pref.SetInt(PREF_TASKS_MAX_ENTRIES_KEY, p.TasksMaxEntries)
 	pref.SetString(PREF_SERVERS_KEY, p.ServerList)
 	pref.SetString(PREF_MASTERKEY_TEST_KEY, p.MasterKeyTest)
+	pref.SetBool(PREF_TASKS_FIRST_START_KEY, p.FirstStart)
 }

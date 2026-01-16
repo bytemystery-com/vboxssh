@@ -435,10 +435,14 @@ func main() {
 			LoadData()
 			go treeUpdateTimerProc()
 			UpdateButtons()
+			if Gui.Settings.FirstStart {
+				Gui.Settings.FirstStart = false
+				Gui.Settings.Store()
+			}
 		}
 	}, func() {
 		CloseApp()
-	}, true)
+	}, Gui.Settings.FirstStart)
 
 	fyne.CurrentApp().Settings().AddListener(func(settings fyne.Settings) {
 		switch settings.ThemeVariant() {

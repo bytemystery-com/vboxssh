@@ -55,9 +55,9 @@ func doCreateVm() {
 				go treeUpdateVmList(s.UUID)
 			}
 		}, Gui.MainWindow)
-	var windowScale float32 = 0.25
+	var windowScale float32 = 0.3
 	si := Gui.MainWindow.Canvas().Size()
-	dia.Resize(fyne.NewSize(si.Width*windowScale, si.Height*windowScale))
+	dia.Resize(fyne.NewSize(si.Width*windowScale, dia.MinSize().Height))
 	dia.Show()
 }
 

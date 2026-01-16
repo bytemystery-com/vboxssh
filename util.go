@@ -103,25 +103,81 @@ func showInfoDialog() {
 	dialog.ShowInformation(lang.X("info.title", "Info"), msg, Gui.MainWindow)
 }
 
-func showPasswordDialog(fOk func(pass string), fCancel func(), withCancel bool) {
+func showPasswordDialog(fOk func(pass string), fCancel func(), withConfirm bool) {
 	var dia *dialog.ConfirmDialog
+
 	passEntry := widget.NewPasswordEntry()
 	passEntry.SetPlaceHolder(lang.X("masterpasswd.dialog.passwdplaceholder", "Master password"))
 	passEntry.OnSubmitted = func(string) {
 		dia.Confirm()
 	}
+
+	passEntryConfirm := widget.NewPasswordEntry()
+	passEntryConfirm.SetPlaceHolder(lang.X("masterpasswd.dialog.confirm.passwdplaceholder", "Retype master password"))
+	passEntryConfirm.OnSubmitted = func(string) {
+		dia.Confirm()
+	}
+
+	validator := func(str string) error {
+		if len(passEntry.Text) < 3 {
+			return errors.New("Passwords is too short")
+		}
+		return nil
+	}
+
+	validatorConfirm := func(str string) error {
+		if passEntryConfirm.Text != passEntry.Text {
+			return errors.New("Passwords does not match")
+		}
+		return nil
+	}
+
+	if withConfirm {
+		passEntry.Validator = validator
+		passEntryConfirm.Validator = validatorConfirm
+	}
+
 	confirm := func(confirm bool) {
 		if confirm {
+			err := passEntry.Validate()
+			if err != nil {
+				dia.Show()
+				return
+			}
+			if withConfirm {
+				err := passEntryConfirm.Validate()
+				if err != nil {
+					dia.Show()
+					return
+				}
+			}
+
 			fOk(passEntry.Text)
 		} else {
 			fCancel()
 		}
 	}
-	dia = dialog.NewCustomConfirm(lang.X("masterpasswd.dialog.title", "Master password"), lang.X("ok", "Ok"), lang.X("cancel", "Cancel"),
-		container.NewVBox(passEntry, util.NewVFiller(1.0)),
-		confirm, Gui.MainWindow)
+	var c *fyne.Container
+	if withConfirm {
+		c = container.NewVBox(passEntry, widget.NewLabel(lang.X("masterpasswd.dialog.confirm", "Confirm password")), passEntryConfirm, util.NewVFiller(1.0))
+	} else {
+		c = container.NewVBox(passEntry, util.NewVFiller(1.0))
+	}
+	t := ""
+	if withConfirm {
+		t = lang.X("masterpasswd.dialog.title.new", "New master password")
+	} else {
+		t = lang.X("masterpasswd.dialog.title", "Master password")
+	}
+
+	dia = dialog.NewCustomConfirm(t, lang.X("ok", "Ok"), lang.X("cancel", "Cancel"),
+		c, confirm, Gui.MainWindow)
 	dia.Show()
+
 	Gui.MainWindow.Canvas().Focus(passEntry)
+	si := Gui.MainWindow.Canvas().Size()
+	var windowScale float32 = .3
+	dia.Resize(fyne.NewSize(si.Width*windowScale, dia.MinSize().Height))
 }
 
 func showAppearanceDialog() {
