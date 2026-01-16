@@ -20,10 +20,11 @@ For Mac: I can not compile because MacOS is needed. - But if someone has a Mac y
 
 
 ## Usage of VBoxSsh
-First you have to add one or multiple servers and the data needed for  
+First you have to set a master password. Store it in your brain!  
+Then you have to add one or multiple servers and the data needed for  
 accesing the vbox account via SSH.  
 Then you can control your machines with the buttons un top.  
-Then you you can view informations and change them.  
+You you can view informations and change them.  
 Most changes are transferred after pressing the "Apply" button.  
 I support the most settings you find in the VirtulBox official frontend.  
 You can manage storages, create vdi files. Attach USB devices and add ISO images.  
@@ -37,4 +38,19 @@ And you can take and manage snapshots.
 ![alt text](/example/screenshots/03.png "Screenshot 03")
 ![alt text](/example/screenshots/04.png "Screenshot 04")
 ![alt text](/example/screenshots/05.png "Screenshot 05")
+
+## Q & A
+Q: Where are the server data stored ?  
+>A: On Linux it will be located at  
+~/.config/fyne/com.bytemystery.vboxssh/preferences.json
+On Windows they are under  
+C:\Users\<USERNAME>>\AppData\Roaming\fyne\com.bytemystery.vboxssh\preferences.json
+
+Q: Where are the passwords for SSH access are stored ?  
+>A: They are encrypted stored in the preferences.json file.  
+
+Q: I hav eforgotten my master password. How to recover ?
+>A: REcovering is not possible.  
+Quit the application, delete the preferences.json file and restart application.  
+Now you can set a new master password, but I need to give the data for the servers again.
 

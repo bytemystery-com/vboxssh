@@ -34,12 +34,13 @@ import (
 )
 
 type Server struct {
-	Name     string `json:"name"`
-	Host     string `json:"host"`
-	Port     int    `json:"port"`
-	User     string `json:"user"`
-	Password string `json:"pass"`
-	KeyFile  string `json:"keyfile"`
+	Name          string                       `json:"name"`
+	Host          string                       `json:"host"`
+	Port          int                          `json:"port"`
+	User          string                       `json:"user"`
+	Password      string                       `json:"pass"`
+	KeyFile       string                       `json:"keyfile"`
+	KeyFileReader func(string) ([]byte, error) `json:"-"`
 }
 
 func (server *Server) Reconnect(client **ssh.Client) error {
@@ -75,13 +76,20 @@ func (server *Server) Connect() (*ssh.Client, error) {
 	if len(server.Host) > 0 {
 		var sig ssh.Signer = nil
 		if len(server.KeyFile) > 0 {
-			key, err := os.ReadFile(server.KeyFile)
-			if err == nil {
-				if len(server.Password) > 0 {
-					sig, err = ssh.ParsePrivateKeyWithPassphrase([]byte(key), []byte(server.Password))
-				} else {
-					sig, err = ssh.ParsePrivateKey([]byte(key))
-				}
+			var key []byte
+			var err error
+			if server.KeyFileReader != nil {
+				key, err = server.KeyFileReader(server.KeyFile)
+			} else {
+				key, err = os.ReadFile(server.KeyFile)
+			}
+			if err != nil {
+				return nil, err
+			}
+			if len(server.Password) > 0 {
+				sig, err = ssh.ParsePrivateKeyWithPassphrase([]byte(key), []byte(server.Password))
+			} else {
+				sig, err = ssh.ParsePrivateKey([]byte(key))
 			}
 
 			if err != nil {

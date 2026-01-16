@@ -85,7 +85,20 @@ func showInfoDialog() {
 		build = lang.X("info.build_unknown", "Unknown")
 	}
 
-	msg := fmt.Sprintf(lang.X("info.msg", "\nVBoxSsh\nAuthor: Reiner Pröls\n\nGo version: %s\n\nFyne version: %s\nBuild: %s\nThema: %s\nPrimary color: %s\nScale: %.2f\n\nPlatform: %s\nArchitecture: %s"), vgo, vfyne, build, thema, col, scale, os, arch)
+	m := Gui.App.Metadata()
+	v := fmt.Sprintf("%s (%d)", m.Version, m.Build)
+	n := m.Name
+	if n == "" {
+		n = "VBoxSsh"
+	}
+	tsStr := ""
+	ts := m.Custom["buildts"]
+	if ts != "" {
+		tsStr = "Build: " + ts + "\n"
+	}
+
+	msg := fmt.Sprintf(lang.X("info.msg", "\n%s\n\nVersion: %s  \n%sAuthor: Reiner Pröls\n\nGo version: %s\n\nFyne version: %s\nBuild: %s\nThema: %s\nPrimary color: %s\nScale: %.2f\n\nPlatform: %s\nArchitecture: %s"),
+		n, v, tsStr, vgo, vfyne, build, thema, col, scale, os, arch)
 	dialog.ShowInformation(lang.X("info.title", "Info"), msg, Gui.MainWindow)
 }
 
@@ -321,7 +334,7 @@ func doHelp() {
 	u := url.URL{
 		Scheme: "https",
 		Host:   "github.com",
-		Path:   "/bytemystery-com/picbutton",
+		Path:   "/bytemystery-com/vboxssh",
 	}
 	Gui.App.OpenURL(&u)
 

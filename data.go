@@ -27,12 +27,16 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 
 	"bytemystery-com/vboxssh/crypt"
 
 	"bytemystery-com/vboxssh/vm"
 
 	"fyne.io/fyne/v2/lang"
+	"fyne.io/fyne/v2/storage"
 )
 
 func saveServers(servers map[string]*vm.VmServer, masterKey string) error {
@@ -67,6 +71,34 @@ func saveServers(servers map[string]*vm.VmServer, masterKey string) error {
 	return nil
 }
 
+func readKeyFile(file string) ([]byte, error) {
+	// Windows: needed ???
+	if filepath.VolumeName(file) != "" {
+		data, err := os.ReadFile(file)
+		return data, err
+	}
+
+	// URI -> use Fyne storage
+	uri, err := storage.ParseURI(file)
+	if err == nil && uri.Scheme() != "" {
+		// URI -> Fyne storage will be used
+		r, err := storage.Reader(uri)
+		if err != nil {
+			return nil, err
+		}
+		defer r.Close()
+		data, err := io.ReadAll(r)
+		if err != nil {
+			return nil, err
+		}
+		return data, nil
+	}
+
+	// Fallback
+	data, err := os.ReadFile(file)
+	return data, err
+}
+
 func loadServers(masterKey string) ([]vm.VmServer, error) {
 	var list []vm.VmServer
 	pass, err := crypt.Decrypt(crypt.InternPassword, masterKey)
@@ -87,6 +119,7 @@ func loadServers(masterKey string) ([]vm.VmServer, error) {
 			list[i].Password = ""
 			fmt.Println("!!! Unable to decrypt !!!")
 		}
+		list[i].KeyFileReader = readKeyFile
 	}
 	SetStatusText(fmt.Sprintf(lang.X("data.serverlist.loaded", "Server list with %d entries was loaded"), len(list)), MsgInfo)
 

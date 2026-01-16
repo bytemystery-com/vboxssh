@@ -22,10 +22,13 @@
 # SPDX-License-Identifier: MIT
 
 
+ts=$(date -u +'%Y-%m-%d - %H:%M:%S')
 # CGO_ENABLED=1 CXX=x86_64-w64-mingw32-g++ CC=x86_64-w64-mingw32-gcc GOOS=windows GOARCH=amd64 go build -ldflags="-s -w -H=windowsgui" .
-CGO_ENABLED=1 CXX=x86_64-w64-mingw32-g++ CC=x86_64-w64-mingw32-gcc GOOS=windows GOARCH=amd64 fyne package --release
+CGO_ENABLED=1 CXX=x86_64-w64-mingw32-g++ CC=x86_64-w64-mingw32-gcc GOOS=windows GOARCH=amd64 fyne package --release --metadata buildts="${ts}"
 # CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" .
-CGO_ENABLED=1 GOOS=linux GOARCH=amd64 fyne package --release
+CGO_ENABLED=1 GOOS=linux GOARCH=amd64 fyne package --release --metadata buildts="${ts}"
+CGO_ENABLED=1 GOOS=linux GOARCH=amd64 fyne build --release --metadata buildts="${ts}"
+mv vboxssh dist/linux
 mv VBoxSsh.tar.xz dist/linux
 mv VBoxSsh.exe dist/windows
 

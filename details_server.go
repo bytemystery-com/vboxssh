@@ -198,12 +198,13 @@ func (srv *ServerSshInfos) add() {
 		return
 	}
 	s := server.Server{
-		Port:     p,
-		Name:     srv.name.Text,
-		Host:     srv.host.Text,
-		User:     srv.user.Text,
-		Password: srv.pass.Text,
-		KeyFile:  srv.keyFile.Text,
+		Port:          p,
+		Name:          srv.name.Text,
+		Host:          srv.host.Text,
+		User:          srv.user.Text,
+		Password:      srv.pass.Text,
+		KeyFile:       srv.keyFile.Text,
+		KeyFileReader: readKeyFile,
 	}
 	var vms *vm.VmServer
 	vms = Data.AddData(s, func() {
