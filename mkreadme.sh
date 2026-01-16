@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (c) 2025 Reiner Pröls
+# Copyright (c) 2026 Reiner Pröls
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,5 +20,7 @@
 # SOFTWARE.
 #
 # SPDX-License-Identifier: MIT
+
+
 
 gomarkdoc -o README.md -e .
