@@ -13,12 +13,6 @@ VBoxSsh is written in [Go](https://go.dev/) and uses [Fyne](https://fyne.io/) as
 Author: Reiner Pröls  
 Licence: MIT  
 
-## Precompiled binaries
-In the dis folder are precompiled binaries for Windows (64-Bit) and Linux (64-Bit).  
-Apk file for Android will come in future.  
-For Mac: I can not compile because MacOS is needed. - But if someone has a Mac you can try it.
-
-
 ## Usage of VBoxSsh
 First you have to set a master password. Store it in your brain!  
 Then you have to add one or multiple servers and the data needed for  
@@ -58,6 +52,22 @@ As user you have to choose the account on which VirtualBox runs e.g. vbox in my 
 ![alt text](/screenshots/task.jpg "Task screen")
 ![alt text](/screenshots/vmserver.jpg "VM info screen")
 ![alt text](/screenshots/newhdd.jpg "New HDD info screen")
+
+## Precompiled binaries
+In the dist folder are precompiled binaries for Windows (64-Bit) and Linux (64-Bit).  
+Apk file for Android will come in future.  
+For Mac: I can not compile because MacOS is needed. - But if someone has a Mac you can try it.
+
+### Binaries
+#### Linux (64 Bit)
+[Tar file](./dist/linux/VBoxSsh.txz)
+[Standalone binary](./dist/linux/vboxssh)
+#### Windows (64 Bit)
+[Standalone exe](./dist/windows/VBoxSsh.exe)
+#### Mac
+Not available - it could be buil but requires Mac + SDK.
+#### Android 
+Will come in future.
 
 ## Q & A
 Q: Where are the server data stored ?  
