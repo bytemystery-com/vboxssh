@@ -60,7 +60,7 @@ For Mac: I can not compile because MacOS is needed. - But if someone has a Mac y
 
 ### Binaries
 #### Linux (64 Bit)
-[Tar file](./dist/linux/VBoxSsh.txz)  
+[Tar file](./dist/linux/VBoxSsh.tar.xz)  
 [Standalone binary](./dist/linux/vboxssh)  
 #### Windows (64 Bit)
 [Standalone exe](./dist/windows/VBoxSsh.exe)  
