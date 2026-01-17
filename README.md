@@ -60,10 +60,10 @@ For Mac: I can not compile because MacOS is needed. - But if someone has a Mac y
 
 ### Binaries
 #### Linux (64 Bit)
-[Tar file](./dist/linux/VBoxSsh.txz)
-[Standalone binary](./dist/linux/vboxssh)
+[Tar file](./dist/linux/VBoxSsh.txz)  
+[Standalone binary](./dist/linux/vboxssh)  
 #### Windows (64 Bit)
-[Standalone exe](./dist/windows/VBoxSsh.exe)
+[Standalone exe](./dist/windows/VBoxSsh.exe)  
 #### Mac
 Not available - it could be buil but requires Mac + SDK.
 #### Android 
