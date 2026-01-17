@@ -458,12 +458,14 @@ func (sys *SystemTab) Apply() {
 				if index >= 0 {
 					val, ok := sys.chipsetMapIndexToType[index]
 					if ok {
-						err := v.SetChipset(&s.Client, val, VMStatusUpdateCallBack)
-						if err != nil {
-							SetStatusText(fmt.Sprintf(lang.X("details.vm_system.chipset.error", "Set chipset for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-						} else {
-							sys.oldValues.chipset = index
-						}
+						go func() {
+							err := v.SetChipset(&s.Client, val, VMStatusUpdateCallBack)
+							if err != nil {
+								SetStatusText(fmt.Sprintf(lang.X("details.vm_system.chipset.error", "Set chipset for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+							} else {
+								sys.oldValues.chipset = index
+							}
+						}()
 					}
 				}
 			}
@@ -476,12 +478,14 @@ func (sys *SystemTab) Apply() {
 				if index >= 0 {
 					val, ok := sys.keyboardMapIndexToType[index]
 					if ok {
-						err := v.SetKeyboard(&s.Client, val, VMStatusUpdateCallBack)
-						if err != nil {
-							SetStatusText(fmt.Sprintf(lang.X("details.vm_system.keyboard.error", "Set keyboard for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-						} else {
-							sys.oldValues.keyboard = index
-						}
+						go func() {
+							err := v.SetKeyboard(&s.Client, val, VMStatusUpdateCallBack)
+							if err != nil {
+								SetStatusText(fmt.Sprintf(lang.X("details.vm_system.keyboard.error", "Set keyboard for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+							} else {
+								sys.oldValues.keyboard = index
+							}
+						}()
 					}
 				}
 			}
@@ -494,12 +498,14 @@ func (sys *SystemTab) Apply() {
 				if index >= 0 {
 					val, ok := sys.mouseMapIndexToType[index]
 					if ok {
-						err := v.SetMouse(&s.Client, val, VMStatusUpdateCallBack)
-						if err != nil {
-							SetStatusText(fmt.Sprintf(lang.X("details.vm_system.mouse.error", "Set mouse for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-						} else {
-							sys.oldValues.mouse = index
-						}
+						go func() {
+							err := v.SetMouse(&s.Client, val, VMStatusUpdateCallBack)
+							if err != nil {
+								SetStatusText(fmt.Sprintf(lang.X("details.vm_system.mouse.error", "Set mouse for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+							} else {
+								sys.oldValues.mouse = index
+							}
+						}()
 					}
 				}
 			}
@@ -508,48 +514,56 @@ func (sys *SystemTab) Apply() {
 		// I/O APIC
 		if !sys.ioApic.Disabled() {
 			if sys.ioApic.Checked != sys.oldValues.ioapic {
-				err := v.SetIoApic(&s.Client, sys.ioApic.Checked, VMStatusUpdateCallBack)
-				if err != nil {
-					SetStatusText(fmt.Sprintf(lang.X("details.vm_system.ioapic.error", "Set I/O API for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-				} else {
-					sys.oldValues.ioapic = sys.ioApic.Checked
-				}
+				go func() {
+					err := v.SetIoApic(&s.Client, sys.ioApic.Checked, VMStatusUpdateCallBack)
+					if err != nil {
+						SetStatusText(fmt.Sprintf(lang.X("details.vm_system.ioapic.error", "Set I/O API for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+					} else {
+						sys.oldValues.ioapic = sys.ioApic.Checked
+					}
+				}()
 			}
 		}
 
 		// ACPI
 		if !sys.acpi.Disabled() {
 			if sys.acpi.Checked != sys.oldValues.acpi {
-				err := v.SetAcpi(&s.Client, sys.acpi.Checked, VMStatusUpdateCallBack)
-				if err != nil {
-					SetStatusText(fmt.Sprintf(lang.X("details.vm_system.acpi.error", "Set ACPI for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-				} else {
-					sys.oldValues.acpi = sys.acpi.Checked
-				}
+				go func() {
+					err := v.SetAcpi(&s.Client, sys.acpi.Checked, VMStatusUpdateCallBack)
+					if err != nil {
+						SetStatusText(fmt.Sprintf(lang.X("details.vm_system.acpi.error", "Set ACPI for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+					} else {
+						sys.oldValues.acpi = sys.acpi.Checked
+					}
+				}()
 			}
 		}
 
 		// HPET
 		if !sys.hpet.Disabled() {
 			if sys.hpet.Checked != sys.oldValues.hpet {
-				err := v.SetHPet(&s.Client, sys.hpet.Checked, VMStatusUpdateCallBack)
-				if err != nil {
-					SetStatusText(fmt.Sprintf(lang.X("details.vm_system.hpet.error", "Set HPET for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-				} else {
-					sys.oldValues.hpet = sys.hpet.Checked
-				}
+				go func() {
+					err := v.SetHPet(&s.Client, sys.hpet.Checked, VMStatusUpdateCallBack)
+					if err != nil {
+						SetStatusText(fmt.Sprintf(lang.X("details.vm_system.hpet.error", "Set HPET for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+					} else {
+						sys.oldValues.hpet = sys.hpet.Checked
+					}
+				}()
 			}
 		}
 
 		// UTC
 		if !sys.clockInUtc.Disabled() {
 			if sys.clockInUtc.Checked != sys.oldValues.clockInUtc {
-				err := v.SetUseUtc(&s.Client, sys.clockInUtc.Checked, VMStatusUpdateCallBack)
-				if err != nil {
-					SetStatusText(fmt.Sprintf(lang.X("details.vm_system.utc.error", "Set UTC for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-				} else {
-					sys.oldValues.clockInUtc = sys.clockInUtc.Checked
-				}
+				go func() {
+					err := v.SetUseUtc(s, sys.clockInUtc.Checked, VMStatusUpdateCallBack)
+					if err != nil {
+						SetStatusText(fmt.Sprintf(lang.X("details.vm_system.utc.error", "Set UTC for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+					} else {
+						sys.oldValues.clockInUtc = sys.clockInUtc.Checked
+					}
+				}()
 			}
 		}
 
@@ -560,12 +574,14 @@ func (sys *SystemTab) Apply() {
 				if index >= 0 {
 					val, ok := sys.firmwareMapIndexToType[index]
 					if ok {
-						err := v.SetFirmware(&s.Client, val, VMStatusUpdateCallBack)
-						if err != nil {
-							SetStatusText(fmt.Sprintf(lang.X("details.vm_system.firmware.error", "Set firmware for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-						} else {
-							sys.oldValues.firmware = index
-						}
+						go func() {
+							err := v.SetFirmware(&s.Client, val, VMStatusUpdateCallBack)
+							if err != nil {
+								SetStatusText(fmt.Sprintf(lang.X("details.vm_system.firmware.error", "Set firmware for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+							} else {
+								sys.oldValues.firmware = index
+							}
+						}()
 					}
 				}
 			}
@@ -574,12 +590,14 @@ func (sys *SystemTab) Apply() {
 		// Secure boot
 		if !sys.secureBoot.Disabled() {
 			if sys.secureBoot.Checked != sys.oldValues.secureboot {
-				err := v.SetSecureBoot(&s.Client, sys.secureBoot.Checked, true, VMStatusUpdateCallBack)
-				if err != nil {
-					SetStatusText(fmt.Sprintf(lang.X("details.vm_system.secureboot.error", "Set secure boot for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-				} else {
-					sys.oldValues.secureboot = sys.secureBoot.Checked
-				}
+				go func() {
+					err := v.SetSecureBoot(&s.Client, sys.secureBoot.Checked, true, VMStatusUpdateCallBack)
+					if err != nil {
+						SetStatusText(fmt.Sprintf(lang.X("details.vm_system.secureboot.error", "Set secure boot for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+					} else {
+						sys.oldValues.secureboot = sys.secureBoot.Checked
+					}
+				}()
 			}
 		}
 
@@ -588,42 +606,46 @@ func (sys *SystemTab) Apply() {
 			val, err := strconv.Atoi(sys.biosTimeOffset.Text)
 			if err == nil {
 				if val != sys.oldValues.biosTimeOffset {
-					err := v.SetBiosTimeOffset(&s.Client, val, VMStatusUpdateCallBack)
-					if err != nil {
-						SetStatusText(fmt.Sprintf(lang.X("details.vm_system.biostimeoffset.error", "Set BIOS time offset for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-					} else {
-						sys.oldValues.biosTimeOffset = val
-					}
+					go func() {
+						err := v.SetBiosTimeOffset(s, val, VMStatusUpdateCallBack)
+						if err != nil {
+							SetStatusText(fmt.Sprintf(lang.X("details.vm_system.biostimeoffset.error", "Set BIOS time offset for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+						} else {
+							sys.oldValues.biosTimeOffset = val
+						}
+					}()
 				}
 			}
 		}
 		// BIOS boot order
 		if sys.bootListOverlay.Hidden && sys.hasBootEntriesChanged() {
-			bError := false
-			i := 1
-			for _, item := range sys.bootEntries {
-				if item.checked {
-					err := v.SetBootOrder(&s.Client, i, item.entryType, VMStatusUpdateCallBack)
-					i += 1
-					if err != nil {
-						SetStatusText(fmt.Sprintf(lang.X("details.vm_system.biosbootorder.error", "Set BIOS boot order for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-						bError = true
+			go func() {
+				bError := false
+				i := 1
+				for _, item := range sys.bootEntries {
+					if item.checked {
+						err := v.SetBootOrder(&s.Client, i, item.entryType, VMStatusUpdateCallBack)
+						i += 1
+						if err != nil {
+							SetStatusText(fmt.Sprintf(lang.X("details.vm_system.biosbootorder.error", "Set BIOS boot order for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+							bError = true
+						}
 					}
 				}
-			}
-			for _, item := range sys.bootEntries {
-				if !item.checked {
-					err := v.SetBootOrder(&s.Client, i, vm.Boot_none, VMStatusUpdateCallBack)
-					i += 1
-					if err != nil {
-						SetStatusText(fmt.Sprintf(lang.X("details.vm_system.biosbootorder.error", "Set BIOS boot order for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-						bError = true
+				for _, item := range sys.bootEntries {
+					if !item.checked {
+						err := v.SetBootOrder(&s.Client, i, vm.Boot_none, VMStatusUpdateCallBack)
+						i += 1
+						if err != nil {
+							SetStatusText(fmt.Sprintf(lang.X("details.vm_system.biosbootorder.error", "Set BIOS boot order for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+							bError = true
+						}
 					}
 				}
-			}
-			if !bError {
-				sys.setOldValuesBootEntries()
-			}
+				if !bError {
+					sys.setOldValuesBootEntries()
+				}
+			}()
 		}
 	}
 }

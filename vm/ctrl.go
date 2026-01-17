@@ -119,7 +119,7 @@ func (m *VMachine) runCmd(client *VmSshClient, cmd string, args []string, bUpdat
 	}
 	if err != nil {
 		m.addLogEntry(lines, false)
-		err = errors.Join(err, errors.New(strings.Join(lines, ".")))
+		// err = errors.Join(err, errors.New(strings.Join(lines, ".")))
 	}
 	return lines, err
 }

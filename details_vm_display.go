@@ -231,22 +231,26 @@ func (display *DisplayTab) Apply() {
 		if !display.ramEntry.Disabled() {
 			n, err := strconv.Atoi(display.ramEntry.Text)
 			if err == nil && n != display.oldValues.vgaRam {
-				err = v.SetVideoRamSize(&s.Client, n, VMStatusUpdateCallBack)
-				if err != nil {
-					SetStatusText(fmt.Sprintf(lang.X("details.vm_display.setvgaram.error", "Set vram size for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-				} else {
-					display.oldValues.vgaRam = n
-				}
+				go func() {
+					err = v.SetVideoRamSize(&s.Client, n, VMStatusUpdateCallBack)
+					if err != nil {
+						SetStatusText(fmt.Sprintf(lang.X("details.vm_display.setvgaram.error", "Set vram size for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+					} else {
+						display.oldValues.vgaRam = n
+					}
+				}()
 			}
 		}
 		if !display.a3D.Disabled() {
 			if display.a3D.Checked != display.oldValues.accel3D {
-				err := v.SetAccelerate3D(&s.Client, display.a3D.Checked, VMStatusUpdateCallBack)
-				if err != nil {
-					SetStatusText(fmt.Sprintf(lang.X("details.vm_display.set3daccel.error", "Set 3D acceleration for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-				} else {
-					display.oldValues.accel3D = display.a3D.Checked
-				}
+				go func() {
+					err := v.SetAccelerate3D(s, display.a3D.Checked, VMStatusUpdateCallBack)
+					if err != nil {
+						SetStatusText(fmt.Sprintf(lang.X("details.vm_display.set3daccel.error", "Set 3D acceleration for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+					} else {
+						display.oldValues.accel3D = display.a3D.Checked
+					}
+				}()
 			}
 		}
 		if !display.controller.Disabled() {
@@ -255,12 +259,14 @@ func (display *DisplayTab) Apply() {
 				if index >= 0 {
 					val, ok := display.controllerMapIndexToType[index]
 					if ok {
-						err := v.SetVgaController(&s.Client, val, VMStatusUpdateCallBack)
-						if err != nil {
-							SetStatusText(fmt.Sprintf(lang.X("details.vm_display.setvgacontroller.error", "Set VGA controller for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-						} else {
-							display.oldValues.vgaController = index
-						}
+						go func() {
+							err := v.SetVgaController(&s.Client, val, VMStatusUpdateCallBack)
+							if err != nil {
+								SetStatusText(fmt.Sprintf(lang.X("details.vm_display.setvgacontroller.error", "Set VGA controller for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+							} else {
+								display.oldValues.vgaController = index
+							}
+						}()
 					}
 				}
 			}

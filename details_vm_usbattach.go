@@ -116,7 +116,6 @@ func (usb *UsbAttachTab) listDetach() {
 func (usb *UsbAttachTab) listRefresh() {
 	index := usb.updateDevices()
 	usb.list.Refresh()
-	usb.list.UnselectAll()
 	if index >= 0 {
 		usb.list.Select(index)
 	}
@@ -128,6 +127,8 @@ func (usb *UsbAttachTab) updateDevices() int {
 	if err != nil {
 		return -1
 	}
+	usb.list.UnselectAll()
+	usb.selectedItem = nil
 
 	usb.devices = usb.devices[:0]
 	selectedIndex := -1

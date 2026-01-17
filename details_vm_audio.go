@@ -73,8 +73,8 @@ var _ DetailsInterface = (*AudioTab)(nil)
 
 func NewAudioTab() *AudioTab {
 	audioTab := AudioTab{
-		hostDriverMapStringToIndex: map[string]int{"default": 0, "alsa": 1, "oss": 2, "pulseaudio": 3, "null": 4},
-		hostDriverMapIndexToType:   map[int]vm.AudioDriverType{0: vm.AudioDriver_default, 1: vm.AudioDriver_alsa, 2: vm.AudioDriver_oss, 3: vm.AudioDriver_pulse, 4: vm.AudioDriver_null},
+		hostDriverMapStringToIndex: map[string]int{"none": 0, "default": 1, "alsa": 2, "oss": 3, "pulseaudio": 4, "null": 5},
+		hostDriverMapIndexToType:   map[int]vm.AudioDriverType{0: vm.AudioDriver_none, 1: vm.AudioDriver_default, 2: vm.AudioDriver_alsa, 3: vm.AudioDriver_oss, 4: vm.AudioDriver_pulse, 5: vm.AudioDriver_null},
 		controllerMapStringToIndex: map[string]int{"ac97": 0, "hda": 1, "sb16": 2},
 		controllerMapIndexToType:   map[int]vm.AudioControllerType{0: vm.AudioController_ac97, 1: vm.AudioController_hda, 2: vm.AudioController_sb16},
 		codecMapStringToIndex:      map[string]int{"stac9700": 0, "ad1980": 1, "stac9221": 2, "sb16": 3},
@@ -95,6 +95,7 @@ func NewAudioTab() *AudioTab {
 	audioTab.out = widget.NewCheck(lang.X("details.vm_audio.out", "Output"), nil)
 	audioTab.in = widget.NewCheck(lang.X("details.vm_audio.in", "Input"), nil)
 	audioTab.hostDriver = widget.NewSelect([]string{
+		lang.X("details.vm_audio.hostdriver.none", "None"),
 		lang.X("details.vm_audio.hostdriver.default", "Default"),
 		lang.X("details.vm_audio.hostdriver.alsa", "ALSA"),
 		lang.X("details.vm_audio.hostdriver.oss", "OSS"),
@@ -266,32 +267,38 @@ func (audio *AudioTab) Apply() {
 		ResetStatus()
 		if !audio.enabled.Disabled() {
 			if audio.enabled.Checked != audio.oldValues.enabled {
-				err := v.SetAudioEnabled(&s.Client, audio.enabled.Checked, VMStatusUpdateCallBack)
-				if err != nil {
-					SetStatusText(fmt.Sprintf(lang.X("details.vm_audio.enableaudio.error", "Enable audio for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-				} else {
-					audio.oldValues.enabled = audio.enabled.Checked
-				}
+				go func() {
+					err := v.SetAudioEnabled(s, audio.enabled.Checked, VMStatusUpdateCallBack)
+					if err != nil {
+						SetStatusText(fmt.Sprintf(lang.X("details.vm_audio.enableaudio.error", "Enable audio for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+					} else {
+						audio.oldValues.enabled = audio.enabled.Checked
+					}
+				}()
 			}
 		}
 		if !audio.out.Disabled() {
 			if audio.out.Checked != audio.oldValues.out {
-				err := v.SetAudioOutEnabled(&s.Client, audio.out.Checked, VMStatusUpdateCallBack)
-				if err != nil {
-					SetStatusText(fmt.Sprintf(lang.X("details.vm_audio.setaudioout.error", "Set audio output for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-				} else {
-					audio.oldValues.out = audio.out.Checked
-				}
+				go func() {
+					err := v.SetAudioOutEnabled(s, audio.out.Checked, VMStatusUpdateCallBack)
+					if err != nil {
+						SetStatusText(fmt.Sprintf(lang.X("details.vm_audio.setaudioout.error", "Set audio output for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+					} else {
+						audio.oldValues.out = audio.out.Checked
+					}
+				}()
 			}
 		}
 		if !audio.in.Disabled() {
 			if audio.in.Checked != audio.oldValues.in {
-				err := v.SetAudioInEnabled(&s.Client, audio.in.Checked, VMStatusUpdateCallBack)
-				if err != nil {
-					SetStatusText(fmt.Sprintf(lang.X("details.vm_audio.setaudioin.error", "Set audio input for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-				} else {
-					audio.oldValues.in = audio.in.Checked
-				}
+				go func() {
+					err := v.SetAudioInEnabled(s, audio.in.Checked, VMStatusUpdateCallBack)
+					if err != nil {
+						SetStatusText(fmt.Sprintf(lang.X("details.vm_audio.setaudioin.error", "Set audio input for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+					} else {
+						audio.oldValues.in = audio.in.Checked
+					}
+				}()
 			}
 		}
 
@@ -299,15 +306,17 @@ func (audio *AudioTab) Apply() {
 			index := audio.hostDriver.SelectedIndex()
 			if index != audio.oldValues.driver {
 				if index >= 0 {
-					val, ok := audio.hostDriverMapIndexToType[index]
-					if ok {
-						err := v.SetAudioDriver(&s.Client, val, VMStatusUpdateCallBack)
-						if err != nil {
-							SetStatusText(fmt.Sprintf(lang.X("details.vm_audio.sethostdriver.error", "Set audio host driver for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-						} else {
-							audio.oldValues.driver = index
+					go func() {
+						val, ok := audio.hostDriverMapIndexToType[index]
+						if ok {
+							err := v.SetAudioDriver(s, val, VMStatusUpdateCallBack)
+							if err != nil {
+								SetStatusText(fmt.Sprintf(lang.X("details.vm_audio.sethostdriver.error", "Set audio host driver for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+							} else {
+								audio.oldValues.driver = index
+							}
 						}
-					}
+					}()
 				}
 			}
 		}
@@ -317,12 +326,14 @@ func (audio *AudioTab) Apply() {
 				if index >= 0 {
 					val, ok := audio.controllerMapIndexToType[index]
 					if ok {
-						err := v.SetAudioController(&s.Client, val, VMStatusUpdateCallBack)
-						if err != nil {
-							SetStatusText(fmt.Sprintf(lang.X("details.vm_audio.setcontroller.error", "Set audio controller for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-						} else {
-							audio.oldValues.controller = index
-						}
+						go func() {
+							err := v.SetAudioController(s, val, VMStatusUpdateCallBack)
+							if err != nil {
+								SetStatusText(fmt.Sprintf(lang.X("details.vm_audio.setcontroller.error", "Set audio controller for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+							} else {
+								audio.oldValues.controller = index
+							}
+						}()
 					}
 				}
 			}
@@ -333,12 +344,14 @@ func (audio *AudioTab) Apply() {
 				if index >= 0 {
 					val, ok := audio.codecMapIndexToType[index]
 					if ok {
-						err := v.SetAudioCodec(&s.Client, val, VMStatusUpdateCallBack)
-						if err != nil {
-							SetStatusText(fmt.Sprintf(lang.X("details.vm_audio.setcodec.error", "Set audio codec for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-						} else {
-							audio.oldValues.codec = index
-						}
+						go func() {
+							err := v.SetAudioCodec(s, val, VMStatusUpdateCallBack)
+							if err != nil {
+								SetStatusText(fmt.Sprintf(lang.X("details.vm_audio.setcodec.error", "Set audio codec for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+							} else {
+								audio.oldValues.codec = index
+							}
+						}()
 					}
 				}
 			}

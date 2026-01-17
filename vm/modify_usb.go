@@ -29,18 +29,34 @@ import (
 	"strconv"
 )
 
-func (m *VMachine) SetUsb(client *VmSshClient, usb UsbType, callBack func(uuid string)) error {
-	switch usb {
-	case Usb_none:
-		return m.setPropertyInternal(client, []string{"modifyvm", m.UUID, "--usb-ohci=off", "--usb-ehci=off", "--usb-xhci=off"}, true, callBack)
-	case Usb_1:
-		return m.setPropertyInternal(client, []string{"modifyvm", m.UUID, "--usb-ohci=on", "--usb-ehci=off", "--usb-xhci=off"}, true, callBack)
-	case Usb_2:
-		return m.setPropertyInternal(client, []string{"modifyvm", m.UUID, "--usb-ohci=off", "--usb-ehci=on", "--usb-xhci=off"}, true, callBack)
-	case Usb_3:
-		return m.setPropertyInternal(client, []string{"modifyvm", m.UUID, "--usb-ohci=off", "--usb-ehci=off", "--usb-xhci=on"}, true, callBack)
-	default:
-		return errors.New("unknown usbtype")
+func (m *VMachine) SetUsb(v *VmServer, usb UsbType, callBack func(uuid string)) error {
+	maj, _, _ := v.getVmVersion()
+	if maj == 6 {
+		switch usb {
+		case Usb_none:
+			return m.setPropertyInternal(&v.Client, []string{"modifyvm", m.UUID, "--usbohci=off", "--usbehci=off", "--usbxhci=off"}, true, callBack)
+		case Usb_1:
+			return m.setPropertyInternal(&v.Client, []string{"modifyvm", m.UUID, "--usbohci=on", "--usbehci=off", "--usbxhci=off"}, true, callBack)
+		case Usb_2:
+			return m.setPropertyInternal(&v.Client, []string{"modifyvm", m.UUID, "--usbohci=off", "--usbehci=on", "--usbxhci=off"}, true, callBack)
+		case Usb_3:
+			return m.setPropertyInternal(&v.Client, []string{"modifyvm", m.UUID, "--usbohci=off", "--usbehci=off", "--usbxhci=on"}, true, callBack)
+		default:
+			return errors.New("unknown usbtype")
+		}
+	} else {
+		switch usb {
+		case Usb_none:
+			return m.setPropertyInternal(&v.Client, []string{"modifyvm", m.UUID, "--usb-ohci=off", "--usb-ehci=off", "--usb-xhci=off"}, true, callBack)
+		case Usb_1:
+			return m.setPropertyInternal(&v.Client, []string{"modifyvm", m.UUID, "--usb-ohci=on", "--usb-ehci=off", "--usb-xhci=off"}, true, callBack)
+		case Usb_2:
+			return m.setPropertyInternal(&v.Client, []string{"modifyvm", m.UUID, "--usb-ohci=off", "--usb-ehci=on", "--usb-xhci=off"}, true, callBack)
+		case Usb_3:
+			return m.setPropertyInternal(&v.Client, []string{"modifyvm", m.UUID, "--usb-ohci=off", "--usb-ehci=off", "--usb-xhci=on"}, true, callBack)
+		default:
+			return errors.New("unknown usbtype")
+		}
 	}
 }
 
@@ -65,50 +81,50 @@ func getYesNoFromBool(b bool) string {
 }
 
 func (m *VMachine) AddUsbFilter(client *VmSshClient, index int, name, vendorId, productId, serialNumber, product, manufacturer string, active bool, callBack func(uuid string)) error {
-	options := []string{"usbfilter", "add", strconv.Itoa(index), "--target=" + m.UUID, "--name=" + client.quoteArgString(name)}
+	options := []string{"usbfilter", "add", strconv.Itoa(index), "--target", m.UUID, "--name", client.quoteArgString(name)}
 	if vendorId != "" {
-		options = append(options, "--vendorid="+client.quoteArgString(vendorId))
+		options = append(options, "--vendorid", client.quoteArgString(vendorId))
 	}
 	if productId != "" {
-		options = append(options, "--productid="+client.quoteArgString(productId))
+		options = append(options, "--productid", client.quoteArgString(productId))
 	}
 	if serialNumber != "" {
-		options = append(options, "--serialnumber="+client.quoteArgString(serialNumber))
+		options = append(options, "--serialnumber", client.quoteArgString(serialNumber))
 	}
 	if product != "" {
-		options = append(options, "--product="+client.quoteArgString(product))
+		options = append(options, "--product", client.quoteArgString(product))
 	}
 	if manufacturer != "" {
-		options = append(options, "--manufacturer="+client.quoteArgString(manufacturer))
+		options = append(options, "--manufacturer", client.quoteArgString(manufacturer))
 	}
-	options = append(options, "--active="+client.quoteArgString(getYesNoFromBool(active)))
+	options = append(options, "--active", client.quoteArgString(getYesNoFromBool(active)))
 	return m.setPropertyInternal(client, options, true, callBack)
 }
 
 func (m *VMachine) ModifyUsbFilter(client *VmSshClient, index int, name, vendorId, productId, serialNumber, product, manufacturer string, active bool, callBack func(uuid string)) error {
-	options := []string{"usbfilter", "modify", strconv.Itoa(index), "--target=" + m.UUID}
+	options := []string{"usbfilter", "modify", strconv.Itoa(index), "--target", m.UUID}
 	if name != "" {
-		options = append(options, "--name="+client.quoteArgString(name))
+		options = append(options, "--name", client.quoteArgString(name))
 	}
 	if vendorId != "" {
-		options = append(options, "--vendorid="+client.quoteArgString(vendorId))
+		options = append(options, "--vendorid", client.quoteArgString(vendorId))
 	}
 	if productId != "" {
-		options = append(options, "--productid="+client.quoteArgString(productId))
+		options = append(options, "--productid", client.quoteArgString(productId))
 	}
 	if serialNumber != "" {
-		options = append(options, "--serialnumber="+client.quoteArgString(serialNumber))
+		options = append(options, "--serialnumber", client.quoteArgString(serialNumber))
 	}
 	if product != "" {
-		options = append(options, "--product="+client.quoteArgString(product))
+		options = append(options, "--product", client.quoteArgString(product))
 	}
 	if manufacturer != "" {
-		options = append(options, "--manufacturer="+client.quoteArgString(manufacturer))
+		options = append(options, "--manufacturer", client.quoteArgString(manufacturer))
 	}
-	options = append(options, "--active="+client.quoteArgString(getYesNoFromBool(active)))
+	options = append(options, "--active", client.quoteArgString(getYesNoFromBool(active)))
 	return m.setPropertyInternal(client, options, true, callBack)
 }
 
 func (m *VMachine) RemoveUsbFilter(client *VmSshClient, index int, callBack func(uuid string)) error {
-	return m.setPropertyInternal(client, []string{"usbfilter", "remove", strconv.Itoa(index), "--target=" + m.UUID}, true, callBack)
+	return m.setPropertyInternal(client, []string{"usbfilter", "remove", strconv.Itoa(index), "--target", m.UUID}, true, callBack)
 }

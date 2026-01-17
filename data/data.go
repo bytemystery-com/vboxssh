@@ -63,6 +63,7 @@ func (v *VmData) LoadData(servers []vm.VmServer) {
 		vmNew.FloppyImagesPath = item.FloppyImagesPath
 		vmNew.DvdImagesPath = item.DvdImagesPath
 		vmNew.HddImagesPath = item.HddImagesPath
+		vmNew.OvaPath = item.OvaPath
 		v.ServerMap[vmNew.UUID] = &vmNew
 		v.ServerMapVmMap[vmNew.UUID] = make(map[string]*vm.VMachine, DEFAULT_NUMBER_OF_VMS_PER_SERVER)
 	}

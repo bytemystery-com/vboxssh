@@ -45,8 +45,8 @@ func (m *VMachine) AttachMedia(client *VmSshClient, controllerName string, stora
 	return m.setPropertyEx2(client, "storageattach", opt, callBack)
 }
 
-func (m *VMachine) RemoveStorageController(client *VmSshClient, controllerName string, callBack func(uuid string)) error {
-	return m.setPropertyEx2(client, "storagectl", []any{m.UUID, "--name=" + client.quoteArgString(controllerName), "--remove"}, callBack)
+func (m *VMachine) RemoveStorageController(client *VmSshClient, controllerName string, chipSet StorageChipsetType, callBack func(uuid string)) error {
+	return m.setPropertyEx2(client, "storagectl", []any{m.UUID, "--name=" + client.quoteArgString(controllerName), "--controller", chipSet, "--remove"}, callBack)
 }
 
 func (m *VMachine) AttachGuestAdditions(client *VmSshClient, controllerName string, port, device int, callBack func(uuid string)) error {
@@ -62,5 +62,5 @@ func (m *VMachine) SetStorageControllerBootable(client *VmSshClient, controllerN
 }
 
 func (m *VMachine) AddStorageController(client *VmSshClient, controllerName string, bus StorageBusType, chipSet StorageChipsetType, ports int, bootable bool, callBack func(uuid string)) error {
-	return m.setPropertyEx2(client, "storagectl", []any{m.UUID, "--name=" + client.quoteArgString(controllerName), controllerName, "--add", bus, "--controller", chipSet, "--portcount", ports, "--bootable", bootable}, callBack)
+	return m.setPropertyEx2(client, "storagectl", []any{m.UUID, "--name=" + client.quoteArgString(controllerName), "--add", bus, "--controller", chipSet, "--portcount", ports, "--bootable", bootable}, callBack)
 }

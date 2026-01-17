@@ -51,6 +51,7 @@ func saveServers(servers map[string]*vm.VmServer, masterKey string) error {
 			FloppyImagesPath: ss.FloppyImagesPath,
 			DvdImagesPath:    ss.DvdImagesPath,
 			HddImagesPath:    ss.HddImagesPath,
+			OvaPath:          ss.OvaPath,
 		}
 		x, err := crypt.Encrypt(pass, s.Password)
 		if err != nil {

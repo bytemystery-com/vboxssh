@@ -388,12 +388,14 @@ func (n *NetworkTab) Apply() {
 			if n.enabled.Checked != n.oldValues.enabled {
 				var err error
 				if !n.enabled.Checked {
-					err = v.SetNetType(&s.Client, n.number+1, vm.Net_none, VMStatusUpdateCallBack)
-					if err != nil {
-						SetStatusText(fmt.Sprintf(lang.X("details.vm_net.disable.error", "Disable network for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-					} else {
-						n.oldValues.enabled = false
-					}
+					go func() {
+						err = v.SetNetType(&s.Client, n.number+1, vm.Net_none, VMStatusUpdateCallBack)
+						if err != nil {
+							SetStatusText(fmt.Sprintf(lang.X("details.vm_net.disable.error", "Disable network for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+						} else {
+							n.oldValues.enabled = false
+						}
+					}()
 				}
 			}
 		}
@@ -403,12 +405,14 @@ func (n *NetworkTab) Apply() {
 				if index >= 0 {
 					val, ok := n.networkMapIndexToType[index]
 					if ok {
-						err := v.SetNetType(&s.Client, n.number+1, val, VMStatusUpdateCallBack)
-						if err != nil {
-							SetStatusText(fmt.Sprintf(lang.X("details.vm_net.network.error", "Set network for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-						} else {
-							n.oldValues.network = index
-						}
+						go func() {
+							err := v.SetNetType(&s.Client, n.number+1, val, VMStatusUpdateCallBack)
+							if err != nil {
+								SetStatusText(fmt.Sprintf(lang.X("details.vm_net.network.error", "Set network for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+							} else {
+								n.oldValues.network = index
+							}
+						}()
 					}
 				}
 			}
@@ -416,48 +420,52 @@ func (n *NetworkTab) Apply() {
 		if !n.name.Disabled() && !n.name.Hidden {
 			val := n.name.Selected
 			if val != n.oldValues.name {
-				var err error
-				switch n.network.SelectedIndex() {
-				case 1: // Bridged
-					err = v.SetBridgeAdapter(&s.Client, n.number+1, val, VMStatusUpdateCallBack)
-				case 3: // Hostonly
-					err = v.SetHostOnlyAdapter(&s.Client, n.number+1, val, VMStatusUpdateCallBack)
-				case 5: // NatNetwork
-					if val != "" {
-						err = v.SetNatAdapter(&s.Client, n.number+1, val, VMStatusUpdateCallBack)
+				go func() {
+					var err error
+					switch n.network.SelectedIndex() {
+					case 1: // Bridged
+						err = v.SetBridgeAdapter(s, n.number+1, val, VMStatusUpdateCallBack)
+					case 3: // Hostonly
+						err = v.SetHostOnlyAdapter(s, n.number+1, val, VMStatusUpdateCallBack)
+					case 5: // NatNetwork
+						if val != "" {
+							err = v.SetNatAdapter(&s.Client, n.number+1, val, VMStatusUpdateCallBack)
+						}
+					case 6: // CloudNetwork
+						if val != "" {
+							err = v.SetCloudNetworkName(&s.Client, n.number+1, val, VMStatusUpdateCallBack)
+						}
+					default:
+						fmt.Println("!!! Unhandeld")
 					}
-				case 6: // CloudNetwork
-					if val != "" {
-						err = v.SetCloudNetworkName(&s.Client, n.number+1, val, VMStatusUpdateCallBack)
+					if err != nil {
+						SetStatusText(fmt.Sprintf(lang.X("details.vm_net.name.error", "Set name fot network for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+					} else {
+						n.oldValues.name = val
 					}
-				default:
-					fmt.Println("!!! Unhandeld")
-				}
-				if err != nil {
-					SetStatusText(fmt.Sprintf(lang.X("details.vm_net.name.error", "Set name fot network for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-				} else {
-					n.oldValues.name = val
-				}
+				}()
 			}
 		}
 		if !n.nameEntry.Disabled() && !n.nameEntry.Hidden {
 			val := n.nameEntry.Text
 			if val != n.oldValues.name {
-				var err error
-				switch n.network.SelectedIndex() {
-				case 2: // Internal
-					err = v.SetInternalNetworkName(&s.Client, n.number+1, val, VMStatusUpdateCallBack)
-				case 4: // Generic
-					err = v.SetGenericNetworkName(&s.Client, n.number+1, val, VMStatusUpdateCallBack)
-				default:
-					fmt.Println("!!! Unhandeld")
-				}
+				go func() {
+					var err error
+					switch n.network.SelectedIndex() {
+					case 2: // Internal
+						err = v.SetInternalNetworkName(&s.Client, n.number+1, val, VMStatusUpdateCallBack)
+					case 4: // Generic
+						err = v.SetGenericNetworkName(s, n.number+1, val, VMStatusUpdateCallBack)
+					default:
+						fmt.Println("!!! Unhandeld")
+					}
 
-				if err != nil {
-					SetStatusText(fmt.Sprintf(lang.X("details.vm_net.name.error", "Set name fot network for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-				} else {
-					n.oldValues.name = val
-				}
+					if err != nil {
+						SetStatusText(fmt.Sprintf(lang.X("details.vm_net.name.error", "Set name fot network for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+					} else {
+						n.oldValues.name = val
+					}
+				}()
 			}
 		}
 		if !n.adapter.Disabled() {
@@ -466,12 +474,14 @@ func (n *NetworkTab) Apply() {
 				if index >= 0 {
 					val, ok := n.adapterMapIndexToType[index]
 					if ok {
-						err := v.SetNetDevice(&s.Client, n.number+1, val, VMStatusUpdateCallBack)
-						if err != nil {
-							SetStatusText(fmt.Sprintf(lang.X("details.vm_net.device.error", "Set net device for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-						} else {
-							n.oldValues.adapter = index
-						}
+						go func() {
+							err := v.SetNetDevice(s, n.number+1, val, VMStatusUpdateCallBack)
+							if err != nil {
+								SetStatusText(fmt.Sprintf(lang.X("details.vm_net.device.error", "Set net device for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+							} else {
+								n.oldValues.adapter = index
+							}
+						}()
 					}
 				}
 			}
@@ -482,30 +492,36 @@ func (n *NetworkTab) Apply() {
 				if index >= 0 {
 					val, ok := n.promiscuousMapIndexToType[index]
 					if ok {
-						err := v.SetPromiscMode(&s.Client, n.number+1, val, VMStatusUpdateCallBack)
-						if err != nil {
-							SetStatusText(fmt.Sprintf(lang.X("details.vm_net.promiscuous.error", "Set net promiscuous for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-						} else {
-							n.oldValues.promiscuous = index
-						}
+						go func() {
+							err := v.SetPromiscMode(s, n.number+1, val, VMStatusUpdateCallBack)
+							if err != nil {
+								SetStatusText(fmt.Sprintf(lang.X("details.vm_net.promiscuous.error", "Set net promiscuous for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+							} else {
+								n.oldValues.promiscuous = index
+							}
+						}()
 					}
 				}
 			}
 		}
 		if !n.mac.Disabled() && n.mac.Text != n.oldValues.mac {
-			err := v.SetMacAddress(&s.Client, n.number+1, n.mac.Text, VMStatusUpdateCallBack)
-			if err != nil {
-				SetStatusText(fmt.Sprintf(lang.X("details.vm_info.setdescription.error", "Set MAC for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-			}
+			go func() {
+				err := v.SetMacAddress(s, n.number+1, n.mac.Text, VMStatusUpdateCallBack)
+				if err != nil {
+					SetStatusText(fmt.Sprintf(lang.X("details.vm_info.setdescription.error", "Set MAC for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+				}
+			}()
 		}
 		if !n.cableConnected.Disabled() {
 			if n.cableConnected.Checked != n.oldValues.connected {
-				err := v.SetCableConnected(&s.Client, n.number+1, n.cableConnected.Checked, VMStatusUpdateCallBack)
-				if err != nil {
-					SetStatusText(fmt.Sprintf(lang.X("details.vm_net.connected.error", "Set net cable connected for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-				} else {
-					n.oldValues.connected = n.cableConnected.Checked
-				}
+				go func() {
+					err := v.SetCableConnected(s, n.number+1, n.cableConnected.Checked, VMStatusUpdateCallBack)
+					if err != nil {
+						SetStatusText(fmt.Sprintf(lang.X("details.vm_net.connected.error", "Set net cable connected for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+					} else {
+						n.oldValues.connected = n.cableConnected.Checked
+					}
+				}()
 			}
 		}
 	}

@@ -1299,106 +1299,108 @@ func (st *StorageContent) Apply() {
 	}
 
 	ResetStatus()
-	for _, itemOld := range st.oldValues.storageControllers {
-		if itemOld.state == StorageControllerState_removed {
-			// ??? -- needed ???
-			for _, medium := range itemOld.mediums {
-				err := v.DetachMedia(&s.Client, itemOld.name, medium.port, medium.device, vm.MediaSpecial_none, VMStatusUpdateCallBack)
-				if err != nil {
-					SetStatusText(fmt.Sprintf(lang.X("details.vm_storage.removemedia.error", "Remove media from controller '%s' from VM '%s' failed with: %s"), itemOld.name, v.Name, err.Error()), MsgError)
-				}
-			}
-			err := v.RemoveStorageController(&s.Client, itemOld.name, VMStatusUpdateCallBack)
-			if err != nil {
-				SetStatusText(fmt.Sprintf(lang.X("details.vm_storage.removectrl.error", "Remove storage controller '%s' from VM '%s' failed with: %s"), itemOld.name, v.Name, err.Error()), MsgError)
-			}
-		}
-	}
-
-	// Changed
-	for _, itemNew := range st.storageControllers {
-		if itemNew.state == StorageControllerState_changed {
-			if itemNew.name != itemNew.oldItem.name {
-				err := v.RenameStorageController(&s.Client, itemNew.oldItem.name, itemNew.name, VMStatusUpdateCallBack)
-				if err != nil {
-					SetStatusText(fmt.Sprintf(lang.X("details.vm_storage.changename.error", "Change storage controller name to '%s' for VM '%s' failed with: %s"), itemNew.name, v.Name, err.Error()), MsgError)
-				}
-			}
-			if itemNew.bootable != itemNew.oldItem.bootable {
-				err := v.SetStorageControllerBootable(&s.Client, itemNew.name, itemNew.bootable, VMStatusUpdateCallBack)
-				if err != nil {
-					SetStatusText(fmt.Sprintf(lang.X("details.vm_storge.setbootable.error", "Set bootable for storage controller '%s' for VM '%s' failed with: %s"), itemNew.name, v.Name, err.Error()), MsgError)
-				}
-			}
-		}
-	}
-
-	// New
-	for _, itemNew := range st.storageControllers {
-		if itemNew.state == StorageControllerState_new {
-			ports := st.getMaxNumberOfMedias(itemNew.busType)
-			if itemNew.busType == vm.StorageBus_ide {
-				ports /= 2
-			}
-			err := v.AddStorageController(&s.Client, itemNew.name, itemNew.busType, itemNew.controllerType, ports, itemNew.bootable, VMStatusUpdateCallBack)
-			if err != nil {
-				SetStatusText(fmt.Sprintf(lang.X("details.vm_storge.removectrl.error", "Add storage controller '%s' to VM '%s' failed with: %s"), itemNew.name, v.Name, err.Error()), MsgError)
-			}
-		}
-	}
-
-	// Media
-	// New
-	for _, itemNew := range st.storageControllers {
-		if itemNew.state == StorageControllerState_new {
-			for _, medium := range itemNew.mediums {
-				err := v.AttachMedia(&s.Client, itemNew.name, medium.getStorageType(itemNew), medium.port, medium.device, medium.getUuidOrFile(), medium.getIsLive(itemNew), medium.getIsSsd(), VMStatusUpdateCallBack)
-				if err != nil {
-					SetStatusText(fmt.Sprintf(lang.X("details.vm_storge.attachmedia.error", "Attach media to storage controller '%s' for VM '%s' failed with: %s"), itemNew.name, v.Name, err.Error()), MsgError)
-				}
-			}
-		}
-	}
-
-	// Changed & Unchanged
-	for _, itemNew := range st.storageControllers {
-		if itemNew.state == StorageControllerState_changed || itemNew.state == StorageControllerState_unchanged {
-			// remove
-			for _, medium := range itemNew.oldItem.mediums {
-				if medium.state == StorageMediumState_removed {
-					err := v.DetachMedia(&s.Client, itemNew.name, medium.port, medium.device, vm.MediaSpecial_none, VMStatusUpdateCallBack)
+	go func() {
+		for _, itemOld := range st.oldValues.storageControllers {
+			if itemOld.state == StorageControllerState_removed {
+				// ??? -- needed ???
+				for _, medium := range itemOld.mediums {
+					err := v.DetachMedia(&s.Client, itemOld.name, medium.port, medium.device, vm.MediaSpecial_none, VMStatusUpdateCallBack)
 					if err != nil {
-						SetStatusText(fmt.Sprintf(lang.X("details.vm_storge.dettach.error", "Dettach media from storage controller '%s' for VM '%s' failed with: %s"), itemNew.name, v.Name, err.Error()), MsgError)
+						SetStatusText(fmt.Sprintf(lang.X("details.vm_storage.removemedia.error", "Remove media from controller '%s' from VM '%s' failed with: %s"), itemOld.name, v.Name, err.Error()), MsgError)
+					}
+				}
+				err := v.RemoveStorageController(&s.Client, itemOld.name, itemOld.controllerType, VMStatusUpdateCallBack)
+				if err != nil {
+					SetStatusText(fmt.Sprintf(lang.X("details.vm_storage.removectrl.error", "Remove storage controller '%s' from VM '%s' failed with: %s"), itemOld.name, v.Name, err.Error()), MsgError)
+				}
+			}
+		}
+
+		// Changed
+		for _, itemNew := range st.storageControllers {
+			if itemNew.state == StorageControllerState_changed {
+				if itemNew.name != itemNew.oldItem.name {
+					err := v.RenameStorageController(&s.Client, itemNew.oldItem.name, itemNew.name, VMStatusUpdateCallBack)
+					if err != nil {
+						SetStatusText(fmt.Sprintf(lang.X("details.vm_storage.changename.error", "Change storage controller name to '%s' for VM '%s' failed with: %s"), itemNew.name, v.Name, err.Error()), MsgError)
+					}
+				}
+				if itemNew.bootable != itemNew.oldItem.bootable {
+					err := v.SetStorageControllerBootable(&s.Client, itemNew.name, itemNew.bootable, VMStatusUpdateCallBack)
+					if err != nil {
+						SetStatusText(fmt.Sprintf(lang.X("details.vm_storge.setbootable.error", "Set bootable for storage controller '%s' for VM '%s' failed with: %s"), itemNew.name, v.Name, err.Error()), MsgError)
 					}
 				}
 			}
+		}
 
-			// changed
-			for _, medium := range itemNew.mediums {
-				if medium.state == StorageMediumState_changed {
-					err := v.DetachMedia(&s.Client, itemNew.name, medium.port, medium.device, vm.MediaSpecial_none, VMStatusUpdateCallBack)
-					if err != nil {
-						SetStatusText(fmt.Sprintf(lang.X("details.vm_storge.dettach.error", "Dettach media from storage controller '%s' for VM '%s' failed with: %s"), itemNew.name, v.Name, err.Error()), MsgError)
-					}
-					err = v.AttachMedia(&s.Client, itemNew.name, medium.getStorageType(itemNew), medium.port, medium.device, medium.uuid, medium.getIsLive(itemNew), medium.getIsSsd(), VMStatusUpdateCallBack)
-					if err != nil {
-						SetStatusText(fmt.Sprintf(lang.X("details.vm_storge.dettach.error", "Attach media to storage controller '%s' for VM '%s' failed with: %s"), itemNew.name, v.Name, err.Error()), MsgError)
-					}
+		// New
+		for _, itemNew := range st.storageControllers {
+			if itemNew.state == StorageControllerState_new {
+				ports := st.getMaxNumberOfMedias(itemNew.busType)
+				if itemNew.busType == vm.StorageBus_ide {
+					ports /= 2
+				}
+				err := v.AddStorageController(&s.Client, itemNew.name, itemNew.busType, itemNew.controllerType, ports, itemNew.bootable, VMStatusUpdateCallBack)
+				if err != nil {
+					SetStatusText(fmt.Sprintf(lang.X("details.vm_storge.removectrl.error", "Add storage controller '%s' to VM '%s' failed with: %s"), itemNew.name, v.Name, err.Error()), MsgError)
 				}
 			}
+		}
 
-			// new
-			for _, medium := range itemNew.mediums {
-				if medium.state == StorageMediumState_new {
+		// Media
+		// New
+		for _, itemNew := range st.storageControllers {
+			if itemNew.state == StorageControllerState_new {
+				for _, medium := range itemNew.mediums {
 					err := v.AttachMedia(&s.Client, itemNew.name, medium.getStorageType(itemNew), medium.port, medium.device, medium.getUuidOrFile(), medium.getIsLive(itemNew), medium.getIsSsd(), VMStatusUpdateCallBack)
 					if err != nil {
-						SetStatusText(fmt.Sprintf(lang.X("details.vm_storge.attach.error", "Attach media to storage controller '%s' for VM '%s' failed with: %s"), itemNew.name, v.Name, err.Error()), MsgError)
+						SetStatusText(fmt.Sprintf(lang.X("details.vm_storge.attachmedia.error", "Attach media to storage controller '%s' for VM '%s' failed with: %s"), itemNew.name, v.Name, err.Error()), MsgError)
 					}
 				}
 			}
 		}
-	}
-	st.saveOldStorageConfig()
+
+		// Changed & Unchanged
+		for _, itemNew := range st.storageControllers {
+			if itemNew.state == StorageControllerState_changed || itemNew.state == StorageControllerState_unchanged {
+				// remove
+				for _, medium := range itemNew.oldItem.mediums {
+					if medium.state == StorageMediumState_removed {
+						err := v.DetachMedia(&s.Client, itemNew.name, medium.port, medium.device, vm.MediaSpecial_none, VMStatusUpdateCallBack)
+						if err != nil {
+							SetStatusText(fmt.Sprintf(lang.X("details.vm_storge.dettach.error", "Dettach media from storage controller '%s' for VM '%s' failed with: %s"), itemNew.name, v.Name, err.Error()), MsgError)
+						}
+					}
+				}
+
+				// changed
+				for _, medium := range itemNew.mediums {
+					if medium.state == StorageMediumState_changed {
+						err := v.DetachMedia(&s.Client, itemNew.name, medium.port, medium.device, vm.MediaSpecial_none, VMStatusUpdateCallBack)
+						if err != nil {
+							SetStatusText(fmt.Sprintf(lang.X("details.vm_storge.dettach.error", "Dettach media from storage controller '%s' for VM '%s' failed with: %s"), itemNew.name, v.Name, err.Error()), MsgError)
+						}
+						err = v.AttachMedia(&s.Client, itemNew.name, medium.getStorageType(itemNew), medium.port, medium.device, medium.uuid, medium.getIsLive(itemNew), medium.getIsSsd(), VMStatusUpdateCallBack)
+						if err != nil {
+							SetStatusText(fmt.Sprintf(lang.X("details.vm_storge.dettach.error", "Attach media to storage controller '%s' for VM '%s' failed with: %s"), itemNew.name, v.Name, err.Error()), MsgError)
+						}
+					}
+				}
+
+				// new
+				for _, medium := range itemNew.mediums {
+					if medium.state == StorageMediumState_new {
+						err := v.AttachMedia(&s.Client, itemNew.name, medium.getStorageType(itemNew), medium.port, medium.device, medium.getUuidOrFile(), medium.getIsLive(itemNew), medium.getIsSsd(), VMStatusUpdateCallBack)
+						if err != nil {
+							SetStatusText(fmt.Sprintf(lang.X("details.vm_storge.attach.error", "Attach media to storage controller '%s' for VM '%s' failed with: %s"), itemNew.name, v.Name, err.Error()), MsgError)
+						}
+					}
+				}
+			}
+		}
+		st.saveOldStorageConfig()
+	}()
 }
 
 func (st *StorageContent) UpdateToolBarIcons() {

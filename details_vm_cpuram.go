@@ -396,74 +396,88 @@ func (cr *CpuRamTab) Apply() {
 		if !cr.cpusEntry.Disabled() {
 			n, err := strconv.Atoi(cr.cpusEntry.Text)
 			if err == nil && n != cr.oldValues.cpus {
-				err = v.SetCpus(&s.Client, n, VMStatusUpdateCallBack)
-				if err != nil {
-					SetStatusText(fmt.Sprintf(lang.X("details.vm_cpuram.cpus.error", "Set number of CPUs for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-				} else {
-					cr.oldValues.cpus = n
-				}
+				go func() {
+					err = v.SetCpus(&s.Client, n, VMStatusUpdateCallBack)
+					if err != nil {
+						SetStatusText(fmt.Sprintf(lang.X("details.vm_cpuram.cpus.error", "Set number of CPUs for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+					} else {
+						cr.oldValues.cpus = n
+					}
+				}()
 			}
 		}
 		if !cr.cpuCapEntry.Disabled() {
 			val, err := strconv.Atoi(cr.cpuCapEntry.Text)
 			if err == nil && val != cr.oldValues.cpuCap {
-				err = v.SetCPUExecCap(&s.Client, val, VMStatusUpdateCallBack)
-				if err != nil {
-					SetStatusText(fmt.Sprintf(lang.X("details.vm_cpuram.cpucap.error", "Set cap for CPUs for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-				} else {
-					cr.oldValues.cpuCap = val
-				}
+				go func() {
+					err = v.SetCPUExecCap(s, val, VMStatusUpdateCallBack)
+					if err != nil {
+						SetStatusText(fmt.Sprintf(lang.X("details.vm_cpuram.cpucap.error", "Set cap for CPUs for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+					} else {
+						cr.oldValues.cpuCap = val
+					}
+				}()
 			}
 		}
 		if !cr.memoryEntry.Disabled() {
 			val, err := strconv.Atoi(cr.memoryEntry.Text)
 			if err == nil && val != cr.oldValues.ram {
-				err = v.SetRam(&s.Client, val, VMStatusUpdateCallBack)
-				if err != nil {
-					SetStatusText(fmt.Sprintf(lang.X("details.vm_cpuram.ram.error", "Set RAM for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-				} else {
-					cr.oldValues.ram = val
-				}
+				go func() {
+					err = v.SetRam(&s.Client, val, VMStatusUpdateCallBack)
+					if err != nil {
+						SetStatusText(fmt.Sprintf(lang.X("details.vm_cpuram.ram.error", "Set RAM for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+					} else {
+						cr.oldValues.ram = val
+					}
+				}()
 			}
 		}
 		if !cr.pae.Disabled() {
 			if cr.pae.Checked != cr.oldValues.pae {
-				err := v.SetPae(&s.Client, cr.pae.Checked, VMStatusUpdateCallBack)
-				if err != nil {
-					SetStatusText(fmt.Sprintf(lang.X("details.vm_cpuram.pae.error", "Set PAE for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-				} else {
-					cr.oldValues.pae = cr.pae.Checked
-				}
+				go func() {
+					err := v.SetPae(&s.Client, cr.pae.Checked, VMStatusUpdateCallBack)
+					if err != nil {
+						SetStatusText(fmt.Sprintf(lang.X("details.vm_cpuram.pae.error", "Set PAE for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+					} else {
+						cr.oldValues.pae = cr.pae.Checked
+					}
+				}()
 			}
 		}
 		if !cr.nestedPaging.Disabled() {
 			if cr.nestedPaging.Checked != cr.oldValues.nestedPaging {
-				err := v.SetNestedPaging(&s.Client, cr.nestedPaging.Checked, VMStatusUpdateCallBack)
-				if err != nil {
-					SetStatusText(fmt.Sprintf(lang.X("details.vm_cpuram.nestedpaging.error", "Set nested paging for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-				} else {
-					cr.oldValues.nestedPaging = cr.nestedPaging.Checked
-				}
+				go func() {
+					err := v.SetNestedPaging(s, cr.nestedPaging.Checked, VMStatusUpdateCallBack)
+					if err != nil {
+						SetStatusText(fmt.Sprintf(lang.X("details.vm_cpuram.nestedpaging.error", "Set nested paging for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+					} else {
+						cr.oldValues.nestedPaging = cr.nestedPaging.Checked
+					}
+				}()
 			}
 		}
 		if !cr.nestedVT.Disabled() {
 			if cr.nestedVT.Checked != cr.oldValues.nestedVt {
-				err := v.SetNestedVirt(&s.Client, cr.nestedVT.Checked, VMStatusUpdateCallBack)
-				if err != nil {
-					SetStatusText(fmt.Sprintf(lang.X("details.vm_cpuram.nestedvt.error", "Set nested VT-x/AMD-V for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-				} else {
-					cr.oldValues.nestedVt = cr.nestedVT.Checked
-				}
+				go func() {
+					err := v.SetNestedVirt(&s.Client, cr.nestedVT.Checked, VMStatusUpdateCallBack)
+					if err != nil {
+						SetStatusText(fmt.Sprintf(lang.X("details.vm_cpuram.nestedvt.error", "Set nested VT-x/AMD-V for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+					} else {
+						cr.oldValues.nestedVt = cr.nestedVT.Checked
+					}
+				}()
 			}
 		}
 		if !cr.x2Apic.Disabled() {
 			if cr.x2Apic.Checked != cr.oldValues.x2apic {
-				err := v.SetX2Acpi(&s.Client, cr.x2Apic.Checked, VMStatusUpdateCallBack)
-				if err != nil {
-					SetStatusText(fmt.Sprintf(lang.X("details.vm_cpuram.x2apic.error", "Set x2APIC for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-				} else {
-					cr.oldValues.x2apic = cr.x2Apic.Checked
-				}
+				go func() {
+					err := v.SetX2Acpi(&s.Client, cr.x2Apic.Checked, VMStatusUpdateCallBack)
+					if err != nil {
+						SetStatusText(fmt.Sprintf(lang.X("details.vm_cpuram.x2apic.error", "Set x2APIC for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+					} else {
+						cr.oldValues.x2apic = cr.x2Apic.Checked
+					}
+				}()
 			}
 		}
 		if !cr.paraVirtInterface.Disabled() {
@@ -472,12 +486,14 @@ func (cr *CpuRamTab) Apply() {
 				if index >= 0 {
 					val, ok := cr.paraVirtMapIndexToType[index]
 					if ok {
-						err := v.SetParaVirtProvider(&s.Client, val, VMStatusUpdateCallBack)
-						if err != nil {
-							SetStatusText(fmt.Sprintf(lang.X("details.vm_cpuram.paravirt.error", "Set para virt. for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-						} else {
-							cr.oldValues.paraVirtInterface = index
-						}
+						go func() {
+							err := v.SetParaVirtProvider(s, val, VMStatusUpdateCallBack)
+							if err != nil {
+								SetStatusText(fmt.Sprintf(lang.X("details.vm_cpuram.paravirt.error", "Set para virt. for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+							} else {
+								cr.oldValues.paraVirtInterface = index
+							}
+						}()
 					}
 				}
 			}

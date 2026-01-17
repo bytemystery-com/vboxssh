@@ -259,36 +259,42 @@ func (info *InfoTab) Apply() {
 	if v != nil {
 		ResetStatus()
 		if !info.name.Disabled() && info.name.Text != info.oldValues.name {
-			err := v.SetName(&s.Client, info.name.Text, VMStatusUpdateCallBack)
-			if err != nil {
-				SetStatusText(fmt.Sprintf(lang.X("details.vm_info.setname.error", "Set name for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-			} else {
-				info.oldValues.name = info.name.Text
-			}
+			go func() {
+				err := v.SetName(&s.Client, info.name.Text, VMStatusUpdateCallBack)
+				if err != nil {
+					SetStatusText(fmt.Sprintf(lang.X("details.vm_info.setname.error", "Set name for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+				} else {
+					info.oldValues.name = info.name.Text
+				}
+			}()
 		}
 		if !info.osVersion.Disabled() && info.osVersion.Selected != info.oldValues.osversion {
 			osTypes, err := s.GetOsTypes(false)
 			if err == nil {
 				for _, item := range osTypes {
 					if item.Name == info.osVersion.Selected {
-						err := v.SetOsType(&s.Client, item.ID, VMStatusUpdateCallBack)
-						if err != nil {
-							SetStatusText(fmt.Sprintf(lang.X("details.vm_info.setos.error", "Set OS for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-						} else {
-							info.oldValues.osversion = info.osVersion.Selected
-						}
+						go func() {
+							err := v.SetOsType(&s.Client, item.ID, VMStatusUpdateCallBack)
+							if err != nil {
+								SetStatusText(fmt.Sprintf(lang.X("details.vm_info.setos.error", "Set OS for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+							} else {
+								info.oldValues.osversion = info.osVersion.Selected
+							}
+						}()
 						break
 					}
 				}
 			}
 		}
 		if !info.description.Disabled() && info.description.Text != info.oldValues.description {
-			err := v.SetDescription(&s.Client, info.description.Text, VMStatusUpdateCallBack)
-			if err != nil {
-				SetStatusText(fmt.Sprintf(lang.X("details.vm_info.setdescription.error", "Set description for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-			} else {
-				info.oldValues.description = info.description.Text
-			}
+			go func() {
+				err := v.SetDescription(&s.Client, info.description.Text, VMStatusUpdateCallBack)
+				if err != nil {
+					SetStatusText(fmt.Sprintf(lang.X("details.vm_info.setdescription.error", "Set description for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+				} else {
+					info.oldValues.description = info.description.Text
+				}
+			}()
 		}
 	}
 }

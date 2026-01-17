@@ -95,6 +95,8 @@ var (
 	regexExtPackWhyUnUsable = regexp.MustCompile(`^Why unusable:\s+(.*)`)
 
 	regexImportDryRunVsys = regexp.MustCompile(`^Virtual system\s+([0-9]+):`)
+
+	regexVersion = regexp.MustCompile(`^([0-9]+)\.([0-9]+)`)
 )
 
 type VmServer struct {
@@ -127,6 +129,25 @@ func NewVmServer(s server.Server) VmServer {
 	}
 	v.Client.IsLocal = v.IsLocal()
 	return v
+}
+
+func (v *VmServer) getVmVersion() (int, int, error) {
+	if v.Version == "" {
+		return 0, 0, errors.New("No version")
+	}
+	items := regexVersion.FindStringSubmatch(v.Version)
+	if len(items) == 3 {
+		maj, err := strconv.Atoi(items[1])
+		if err != nil {
+			return 0, 0, errors.New("Parse error")
+		}
+		min, err := strconv.Atoi(items[2])
+		if err != nil {
+			return 0, 0, errors.New("Parse error")
+		}
+		return maj, min, nil
+	}
+	return 0, 0, errors.New("Unknown version")
 }
 
 func (v *VmServer) Connect(fOk func(), fErr func(error)) error {
@@ -297,27 +318,6 @@ func (s *VmServer) GetCloudAdapters(update bool) ([]NicAdapter, error) {
 	adapters := getAdapters(regexNicName, lines)
 	s.CloudAdapter = adapters
 	return s.CloudAdapter, nil
-}
-
-func (s *VmServer) UpdateAllNetAdapters() error {
-	var errs error
-	err := s.UpdateBridgeAdapters()
-	if err != nil {
-		errs = errors.Join(errs, err)
-	}
-	err = s.UpdateHostAdapters()
-	if err != nil {
-		errs = errors.Join(errs, err)
-	}
-	err = s.UpdateInternalAdapters()
-	if err != nil {
-		errs = errors.Join(errs, err)
-	}
-	err = s.UpdateNatAdapters()
-	if err != nil {
-		errs = errors.Join(errs, err)
-	}
-	return errs
 }
 
 func getAdapters(reg *regexp.Regexp, lines []string) []NicAdapter {
@@ -1076,7 +1076,7 @@ func (s *VmServer) GetExtPackHostInfos() ([]*ExtPackInfoType, error) {
 		return nil, err
 	}
 	extPackList := make([]*ExtPackInfoType, 0, 1)
-	var info ExtPackInfoType
+	var info *ExtPackInfoType
 	for _, line := range lines {
 		if line == "" {
 			continue
@@ -1084,10 +1084,10 @@ func (s *VmServer) GetExtPackHostInfos() ([]*ExtPackInfoType, error) {
 
 		items := regexExtPackNr.FindStringSubmatch(line)
 		if len(items) == 2 {
-			info = ExtPackInfoType{
+			info = &ExtPackInfoType{
 				Name: items[1],
 			}
-			extPackList = append(extPackList, &info)
+			extPackList = append(extPackList, info)
 			continue
 		}
 
@@ -1104,7 +1104,7 @@ func (s *VmServer) GetExtPackHostInfos() ([]*ExtPackInfoType, error) {
 		}
 		items = regexExtPackUsable.FindStringSubmatch(line)
 		if len(items) == 2 {
-			if strings.ToLower(items[1]) == "true" {
+			if strings.TrimSpace(strings.ToLower(items[1])) == "true" {
 				info.Usable = true
 			} else {
 				info.Usable = false

@@ -24,26 +24,60 @@
 
 package vm
 
-func (m *VMachine) SetAudioEnabled(client *VmSshClient, audioEnabled bool, callBack func(uuid string)) error {
-	return m.setProperty(client, "audio-enabled", audioEnabled, callBack)
+func (m *VMachine) SetAudioEnabled(v *VmServer, audioEnabled bool, callBack func(uuid string)) error {
+	maj, _, _ := v.getVmVersion()
+	if maj == 6 {
+		if !audioEnabled {
+			return m.SetAudioDriver(v, AudioDriver_none, callBack)
+		} else {
+			return nil
+		}
+	} else {
+		return m.setProperty(&v.Client, "audio-enabled", audioEnabled, callBack)
+	}
 }
 
-func (m *VMachine) SetAudioController(client *VmSshClient, audioController AudioControllerType, callBack func(uuid string)) error {
-	return m.setProperty(client, "audio-controller", audioController, callBack)
+func (m *VMachine) SetAudioController(v *VmServer, audioController AudioControllerType, callBack func(uuid string)) error {
+	maj, _, _ := v.getVmVersion()
+	if maj == 6 {
+		return m.setProperty(&v.Client, "audiocontroller", audioController, callBack)
+	} else {
+		return m.setProperty(&v.Client, "audio-controller", audioController, callBack)
+	}
 }
 
-func (m *VMachine) SetAudioCodec(client *VmSshClient, audioCodec AudioCodecType, callBack func(uuid string)) error {
-	return m.setProperty(client, "audio-codec", audioCodec, callBack)
+func (m *VMachine) SetAudioCodec(v *VmServer, audioCodec AudioCodecType, callBack func(uuid string)) error {
+	maj, _, _ := v.getVmVersion()
+	if maj == 6 {
+		return m.setProperty(&v.Client, "audiocodec", audioCodec, callBack)
+	} else {
+		return m.setProperty(&v.Client, "audio-codec", audioCodec, callBack)
+	}
 }
 
-func (m *VMachine) SetAudioInEnabled(client *VmSshClient, audioInEnabled bool, callBack func(uuid string)) error {
-	return m.setProperty(client, "audio-in", audioInEnabled, callBack)
+func (m *VMachine) SetAudioInEnabled(v *VmServer, audioInEnabled bool, callBack func(uuid string)) error {
+	maj, _, _ := v.getVmVersion()
+	if maj == 6 {
+		return m.setProperty(&v.Client, "audioin", audioInEnabled, callBack)
+	} else {
+		return m.setProperty(&v.Client, "audio-in", audioInEnabled, callBack)
+	}
 }
 
-func (m *VMachine) SetAudioOutEnabled(client *VmSshClient, audioOutEnabled bool, callBack func(uuid string)) error {
-	return m.setProperty(client, "audio-out", audioOutEnabled, callBack)
+func (m *VMachine) SetAudioOutEnabled(v *VmServer, audioOutEnabled bool, callBack func(uuid string)) error {
+	maj, _, _ := v.getVmVersion()
+	if maj == 6 {
+		return m.setProperty(&v.Client, "audioout", audioOutEnabled, callBack)
+	} else {
+		return m.setProperty(&v.Client, "audio-out", audioOutEnabled, callBack)
+	}
 }
 
-func (m *VMachine) SetAudioDriver(client *VmSshClient, audioDriver AudioDriverType, callBack func(uuid string)) error {
-	return m.setProperty(client, "audio-driver", audioDriver, callBack)
+func (m *VMachine) SetAudioDriver(v *VmServer, audioDriver AudioDriverType, callBack func(uuid string)) error {
+	maj, _, _ := v.getVmVersion()
+	if maj == 6 {
+		return m.setProperty(&v.Client, "audio", audioDriver, callBack)
+	} else {
+		return m.setProperty(&v.Client, "audio-driver", audioDriver, callBack)
+	}
 }

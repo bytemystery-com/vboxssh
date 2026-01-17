@@ -28,7 +28,9 @@ import (
 	"embed"
 	"errors"
 	"fmt"
+	"image/png"
 	"net/url"
+	"os"
 	"runtime"
 	"runtime/debug"
 
@@ -394,16 +396,15 @@ func doHelp() {
 		Path:   "/bytemystery-com/vboxssh",
 	}
 	Gui.App.OpenURL(&u)
+}
 
-	/*
-		s, _ := getActiveServerAndVm()
-		if s == nil {
-			return
-		}
-		// r := regexp.MustCompile(`(?i)\.(png|jpg)$`)
-		sftp := filebrowser.NewSftpBrowser(s.Client.Client, "", nil, "Select dir", filebrowser.SftpFileBrowserMode_selectdir)
-		sftp.Show(Gui.MainWindow, 0.75, func(file string, fi os.FileInfo, dir string) {
-			fmt.Println(file, dir)
-		})
-	*/
+func MakeScreenShot() {
+	img := Gui.MainWindow.Canvas().Capture()
+	f, err := os.Create("screenshot.png")
+	if err != nil {
+		return
+	}
+	defer f.Close()
+
+	png.Encode(f, img)
 }

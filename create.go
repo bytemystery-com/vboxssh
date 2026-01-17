@@ -41,7 +41,7 @@ func doCreateVm() {
 	}
 
 	name := widget.NewEntry()
-	name.SetPlaceHolder(lang.X("create.name.placeholder", "Name for the new VM"))
+	name.SetPlaceHolder(lang.X("create.name.placeholder", "Name of the new VM"))
 	item := widget.NewFormItem(lang.X("create.name", "Name"), name)
 
 	dia := dialog.NewForm(lang.X("create.title", "Create new VM"),
@@ -55,9 +55,9 @@ func doCreateVm() {
 				go treeUpdateVmList(s.UUID)
 			}
 		}, Gui.MainWindow)
-	var windowScale float32 = 0.3
-	si := Gui.MainWindow.Canvas().Size()
-	dia.Resize(fyne.NewSize(si.Width*windowScale, dia.MinSize().Height))
+	var windowScale float32 = 1.25
+	// si := Gui.MainWindow.Canvas().Size()
+	dia.Resize(fyne.NewSize(dia.MinSize().Width*windowScale, dia.MinSize().Height*windowScale))
 	dia.Show()
 }
 
@@ -81,7 +81,7 @@ func doDeleteVm() {
 					fmt.Sprintf(lang.X("delete.confirm.msg", "Do you really want to delete the VM\n'%s'\nfrom server '%s' ?"), m.Name, s.Name),
 					func(ok bool) {
 						if ok {
-							err := m.DeleteVm(&s.Client, del.Checked)
+							err := m.DeleteVm(s, del.Checked)
 							if err != nil {
 								SetStatusText(fmt.Sprintf(lang.X("delete.failed", "Deleting VM width name '%s' failed"), m.Name), MsgError)
 							} else {

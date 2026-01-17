@@ -509,6 +509,9 @@ func (i *ImportHelper) doImportOva(file string) {
 			t := fmt.Sprintf(lang.X("import.done.ok", "OVA '%s' was imported on server '%s'"), file, i.vmServer.Name)
 			Gui.TasksInfos.FinishTask(uuid, t, false)
 			SendNotification(lang.X("import.notification.title", "OVA imported"), t)
+			fyne.Do(func() {
+				go treeUpdateVmList(i.vmServer.UUID)
+			})
 		}
 	}()
 }

@@ -134,9 +134,9 @@ func (snap *SnapshotTab) take() {
 				}
 			}()
 		}, Gui.MainWindow)
-	si := Gui.MainWindow.Canvas().Size()
-	var windowScale float32 = 0.25
-	dia.Resize(fyne.NewSize(si.Width*windowScale, si.Height*windowScale))
+	// si := Gui.MainWindow.Canvas().Size()
+	// var windowScale float32 = 1.5
+	dia.Resize(fyne.NewSize(dia.MinSize().Height*1.9, dia.MinSize().Height*1.2))
 	dia.Show()
 	Gui.MainWindow.Canvas().Focus(nameEntry)
 }
@@ -373,17 +373,24 @@ func (snap *SnapshotTab) updateToolbarButtons() {
 		snap.toolTake.Disable()
 		return
 	}
-	snap.toolTake.Enable()
+	state, err := v.GetState()
+	if err == nil {
+		if (state == vm.RunState_aborted || state == vm.RunState_off) &&
+			snap.selectedItem != nil && !snap.selectedItem.isCurrent {
+			snap.toolRestore.Enable()
+		} else {
+			snap.toolRestore.Disable()
+		}
+	} else {
+		snap.toolRestore.Disable()
+	}
 	if snap.selectedItem == nil {
 		snap.toolDelete.Disable()
-		snap.toolRestore.Disable()
 	} else {
 		if snap.selectedItem.isCurrent {
 			snap.toolDelete.Disable()
-			snap.toolRestore.Disable()
 		} else {
 			snap.toolDelete.Enable()
-			snap.toolRestore.Enable()
 		}
 	}
 }

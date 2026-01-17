@@ -422,6 +422,8 @@ func (usb *UsbTab) UpdateBySelect() {
 	}
 
 	// Filters
+	usb.selectedItem = nil
+	usb.list.UnselectAll()
 	index := 1
 	usb.filters = usb.filters[:0]
 	for {
@@ -444,6 +446,9 @@ func (usb *UsbTab) UpdateBySelect() {
 	usb.saveOldFilterConfig()
 
 	usb.list.Refresh()
+	if len(usb.filters) > 0 {
+		usb.list.Select(0)
+	}
 
 	usb.UpdateByStatus()
 	usb.updateToolbarButtons()
@@ -567,30 +572,34 @@ func (usb *UsbTab) Apply() {
 				usbType = usb.mapIndexToValue[usb.usbType.SelectedIndex()]
 			}
 			if usbType != usb.oldValues.usbType {
-				err := v.SetUsb(&s.Client, usbType, VMStatusUpdateCallBack)
+				go func() {
+					err := v.SetUsb(s, usbType, VMStatusUpdateCallBack)
+					if err != nil {
+						SetStatusText(fmt.Sprintf(lang.X("details.vm_usb.setusb.error", "Setting USB for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+					} else {
+						usb.oldValues.usbType = usbType
+					}
+				}()
+			}
+		}
+
+		go func() {
+			// Remove all old
+			for range usb.oldValues.filters {
+				err := v.RemoveUsbFilter(&s.Client, 0, VMStatusUpdateCallBack)
 				if err != nil {
-					SetStatusText(fmt.Sprintf(lang.X("details.vm_usb.setusb.error", "Setting USB for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-				} else {
-					usb.oldValues.usbType = usbType
+					SetStatusText(fmt.Sprintf(lang.X("details.vm_usb.removeusbfilter.error", "Remove USB filter for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
 				}
 			}
-		}
 
-		// Remove all old
-		for range usb.oldValues.filters {
-			err := v.RemoveUsbFilter(&s.Client, 0, VMStatusUpdateCallBack)
-			if err != nil {
-				SetStatusText(fmt.Sprintf(lang.X("details.vm_usb.removeusbfilter.error", "Remove USB filter for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+			// Add all new
+			for index, item := range usb.filters {
+				err := v.AddUsbFilter(&s.Client, index, item.name, item.vendorId, item.productId, item.serialNumber, item.product, item.manufacturer, item.isChecked, VMStatusUpdateCallBack)
+				if err != nil {
+					SetStatusText(fmt.Sprintf(lang.X("details.vm_usb.addusbfilter.error", "Add USB filter for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+				}
 			}
-		}
-
-		// Add all new
-		for index, item := range usb.filters {
-			err := v.AddUsbFilter(&s.Client, index, item.name, item.vendorId, item.productId, item.serialNumber, item.product, item.manufacturer, item.isChecked, VMStatusUpdateCallBack)
-			if err != nil {
-				SetStatusText(fmt.Sprintf(lang.X("details.vm_usb.addusbfilter.error", "Add USB filter for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-			}
-		}
-		usb.saveOldFilterConfig()
+			usb.saveOldFilterConfig()
+		}()
 	}
 }

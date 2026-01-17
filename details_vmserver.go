@@ -193,6 +193,7 @@ func (srv *VmServerInfos) UpdateBySelect() {
 		}
 		srv.extPackData = append(srv.extPackData, &i)
 	}
+	srv.extPackList.Refresh()
 }
 
 func (srv *VmServerInfos) reset() {

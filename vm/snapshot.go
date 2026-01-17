@@ -25,9 +25,7 @@
 package vm
 
 import (
-	"errors"
 	"io"
-	"strings"
 )
 
 func (m *VMachine) TakeSnapshot(client *VmSshClient, name, description string, live bool, statusWriter io.Writer) error {
@@ -44,7 +42,6 @@ func (m *VMachine) TakeSnapshot(client *VmSshClient, name, description string, l
 	lines, err := RunCmd(client, VBOXMANAGE_APP, opt, nil, statusWriter)
 	if err != nil {
 		m.addLogEntry(lines, false)
-		err = errors.Join(err, errors.New(strings.Join(lines, ".")))
 	}
 	return err
 }
@@ -54,7 +51,6 @@ func (m *VMachine) DeleteSnapshot(client *VmSshClient, uuid string, statusWriter
 	lines, err := RunCmd(client, VBOXMANAGE_APP, opt, nil, statusWriter)
 	if err != nil {
 		m.addLogEntry(lines, false)
-		err = errors.Join(err, errors.New(strings.Join(lines, ".")))
 	}
 	return err
 }
@@ -64,7 +60,6 @@ func (m *VMachine) RestoreSnapshot(client *VmSshClient, uuid string, statusWrite
 	lines, err := RunCmd(client, VBOXMANAGE_APP, opt, nil, statusWriter)
 	if err != nil {
 		m.addLogEntry(lines, false)
-		err = errors.Join(err, errors.New(strings.Join(lines, ".")))
 	}
 	return err
 }

@@ -28,22 +28,47 @@ func (m *VMachine) SetEnableRde(client *VmSshClient, bRde bool, callBack func(uu
 	return m.setProperty(client, "vrde", bRde, callBack)
 }
 
-func (m *VMachine) SetRdePorts(client *VmSshClient, ports string, callBack func(uuid string)) error {
-	return m.setProperty(client, "vrde-port", ports, callBack)
+func (m *VMachine) SetRdePorts(s *VmServer, ports string, callBack func(uuid string)) error {
+	maj, _, _ := s.getVmVersion()
+	if maj == 6 {
+		return m.setProperty(&s.Client, "vrdeport", ports, callBack)
+	} else {
+		return m.setProperty(&s.Client, "vrde-port", ports, callBack)
+	}
 }
 
-func (m *VMachine) SetRdeMultiConnection(client *VmSshClient, multi bool, callBack func(uuid string)) error {
-	return m.setProperty(client, "vrde-multi-con", multi, callBack)
+func (m *VMachine) SetRdeMultiConnection(s *VmServer, multi bool, callBack func(uuid string)) error {
+	maj, _, _ := s.getVmVersion()
+	if maj == 6 {
+		return m.setProperty(&s.Client, "vrdemulticon", multi, callBack)
+	} else {
+		return m.setProperty(&s.Client, "vrde-multi-con", multi, callBack)
+	}
 }
 
-func (m *VMachine) SetRdeReuseConnection(client *VmSshClient, reuse bool, callBack func(uuid string)) error {
-	return m.setProperty(client, "vrde-reuse-con", reuse, callBack)
+func (m *VMachine) SetRdeReuseConnection(s *VmServer, reuse bool, callBack func(uuid string)) error {
+	maj, _, _ := s.getVmVersion()
+	if maj == 6 {
+		return m.setProperty(&s.Client, "vrdereusecon", reuse, callBack)
+	} else {
+		return m.setProperty(&s.Client, "vrde-reuse-con", reuse, callBack)
+	}
 }
 
-func (m *VMachine) SetRdeSecurityMethode(client *VmSshClient, security RdpSecurityType, callBack func(uuid string)) error {
-	return m.setProperty(client, "vrde-property=Security/Method", security, callBack)
+func (m *VMachine) SetRdeSecurityMethode(s *VmServer, security RdpSecurityType, callBack func(uuid string)) error {
+	maj, _, _ := s.getVmVersion()
+	if maj == 6 {
+		return m.setProperty(&s.Client, "vrdeproperty=Security/Method", security, callBack)
+	} else {
+		return m.setProperty(&s.Client, "vrde-property=Security/Method", security, callBack)
+	}
 }
 
-func (m *VMachine) SetRdeAuthType(client *VmSshClient, auth RdpAuthType, callBack func(uuid string)) error {
-	return m.setProperty(client, "vrde-auth-type", auth, callBack)
+func (m *VMachine) SetRdeAuthType(s *VmServer, auth RdpAuthType, callBack func(uuid string)) error {
+	maj, _, _ := s.getVmVersion()
+	if maj == 6 {
+		return m.setProperty(&s.Client, "vrdeauthtype", auth, callBack)
+	} else {
+		return m.setProperty(&s.Client, "vrde-auth-type", auth, callBack)
+	}
 }

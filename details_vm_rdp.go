@@ -248,42 +248,50 @@ func (rdp *RdpTab) Apply() {
 		ResetStatus()
 		if !rdp.enabled.Disabled() {
 			if rdp.enabled.Checked != rdp.oldValues.enabled {
-				err := v.SetEnableRde(&s.Client, rdp.enabled.Checked, VMStatusUpdateCallBack)
-				if err != nil {
-					SetStatusText(fmt.Sprintf(lang.X("details.vm_rdp.enablerdp.error", "Enable RDP for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-				} else {
-					rdp.oldValues.enabled = rdp.enabled.Checked
-				}
+				go func() {
+					err := v.SetEnableRde(&s.Client, rdp.enabled.Checked, VMStatusUpdateCallBack)
+					if err != nil {
+						SetStatusText(fmt.Sprintf(lang.X("details.vm_rdp.enablerdp.error", "Enable RDP for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+					} else {
+						rdp.oldValues.enabled = rdp.enabled.Checked
+					}
+				}()
 			}
 		}
 		if !rdp.ports.Disabled() {
 			if rdp.ports.Text != rdp.oldValues.ports {
-				err := v.SetRdePorts(&s.Client, rdp.ports.Text, VMStatusUpdateCallBack)
-				if err != nil {
-					SetStatusText(fmt.Sprintf(lang.X("details.vm_rdp.setports.error", "Set RDP ports for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-				} else {
-					rdp.oldValues.ports = rdp.ports.Text
-				}
+				go func() {
+					err := v.SetRdePorts(s, rdp.ports.Text, VMStatusUpdateCallBack)
+					if err != nil {
+						SetStatusText(fmt.Sprintf(lang.X("details.vm_rdp.setports.error", "Set RDP ports for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+					} else {
+						rdp.oldValues.ports = rdp.ports.Text
+					}
+				}()
 			}
 		}
 		if !rdp.multiple.Disabled() {
 			if rdp.multiple.Checked != rdp.oldValues.multiple {
-				err := v.SetRdeMultiConnection(&s.Client, rdp.multiple.Checked, VMStatusUpdateCallBack)
-				if err != nil {
-					SetStatusText(fmt.Sprintf(lang.X("details.vm_rdp.multiuse.error", "Set RDP multi use for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-				} else {
-					rdp.oldValues.multiple = rdp.multiple.Checked
-				}
+				go func() {
+					err := v.SetRdeMultiConnection(s, rdp.multiple.Checked, VMStatusUpdateCallBack)
+					if err != nil {
+						SetStatusText(fmt.Sprintf(lang.X("details.vm_rdp.multiuse.error", "Set RDP multi use for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+					} else {
+						rdp.oldValues.multiple = rdp.multiple.Checked
+					}
+				}()
 			}
 		}
 		if !rdp.reuseCon.Disabled() {
 			if rdp.reuseCon.Checked != rdp.oldValues.reusecon {
-				err := v.SetRdeReuseConnection(&s.Client, rdp.reuseCon.Checked, VMStatusUpdateCallBack)
-				if err != nil {
-					SetStatusText(fmt.Sprintf(lang.X("details.vm_rdp.reuse.error", "Set RDP reuse connection for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-				} else {
-					rdp.oldValues.reusecon = rdp.reuseCon.Checked
-				}
+				go func() {
+					err := v.SetRdeReuseConnection(s, rdp.reuseCon.Checked, VMStatusUpdateCallBack)
+					if err != nil {
+						SetStatusText(fmt.Sprintf(lang.X("details.vm_rdp.reuse.error", "Set RDP reuse connection for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+					} else {
+						rdp.oldValues.reusecon = rdp.reuseCon.Checked
+					}
+				}()
 			}
 		}
 		if !rdp.security.Disabled() {
@@ -292,12 +300,14 @@ func (rdp *RdpTab) Apply() {
 				if index >= 0 {
 					val, ok := rdp.securityMapIndexToType[index]
 					if ok {
-						err := v.SetRdeSecurityMethode(&s.Client, val, VMStatusUpdateCallBack)
-						if err != nil {
-							SetStatusText(fmt.Sprintf(lang.X("details.vm_rdp.setsecurity.error", "Set security methode for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-						} else {
-							rdp.oldValues.security = index
-						}
+						go func() {
+							err := v.SetRdeSecurityMethode(s, val, VMStatusUpdateCallBack)
+							if err != nil {
+								SetStatusText(fmt.Sprintf(lang.X("details.vm_rdp.setsecurity.error", "Set security methode for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+							} else {
+								rdp.oldValues.security = index
+							}
+						}()
 					}
 				}
 			}
@@ -308,12 +318,14 @@ func (rdp *RdpTab) Apply() {
 				if index >= 0 {
 					val, ok := rdp.authMapIndexToType[index]
 					if ok {
-						err := v.SetRdeAuthType(&s.Client, val, VMStatusUpdateCallBack)
-						if err != nil {
-							SetStatusText(fmt.Sprintf(lang.X("details.vm_rdp.authtype.error", "Set auth type for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-						} else {
-							rdp.oldValues.auth = index
-						}
+						go func() {
+							err := v.SetRdeAuthType(s, val, VMStatusUpdateCallBack)
+							if err != nil {
+								SetStatusText(fmt.Sprintf(lang.X("details.vm_rdp.authtype.error", "Set auth type for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+							} else {
+								rdp.oldValues.auth = index
+							}
+						}()
 					}
 				}
 			}
