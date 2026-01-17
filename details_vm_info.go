@@ -190,19 +190,16 @@ func (info *InfoTab) UpdateBySelect() {
 
 	info.setOsTypes(s, v)
 	info.setVersionTypes(s, v)
-	if location, ok := v.Properties["CfgFile"]; ok {
-		info.cfgLocation.SetText(location)
-	}
-	name, ok := v.Properties["name"]
-	if ok {
-		info.name.SetText(name)
-		info.oldValues.name = name
-	}
-	description, ok := v.Properties["description"]
-	if ok {
-		info.description.SetText(description)
-		info.oldValues.description = description
-	}
+	location := v.Properties["CfgFile"]
+	info.cfgLocation.SetText(location)
+
+	name := v.Properties["name"]
+	info.name.SetText(name)
+	info.oldValues.name = name
+
+	description := v.Properties["description"]
+	info.description.SetText(description)
+	info.oldValues.description = description
 }
 
 // called from status updates

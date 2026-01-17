@@ -32,12 +32,32 @@ You can export and import ova files.
 You can delete and create virtual machines.  
 And you can take and manage snapshots.  
 
+### Adding a server
+You can manage your locally installed VirtualBox.  
+For this in the SSH fields only give a name for the connection. Leave the other fields empty.  
+Virtual machines on local will be started with window. Machines over SSH will be always started headless.  
+For a SSH connection enter host and port (normally 22). And give user and password.  
+I recommend to use authentication via a key file.  
+The passowrd field will be the password for the key - if required. If not leave the password field empty.  
+As user you have to choose the account on which VirtualBox runs e.g. vbox in my case.  
+
+
 ## Screenshots
-![alt text](/example/screenshots/01.png "Screenshot 01")
-![alt text](/example/screenshots/02.png "Screenshot 02")
-![alt text](/example/screenshots/03.png "Screenshot 03")
-![alt text](/example/screenshots/04.png "Screenshot 04")
-![alt text](/example/screenshots/05.png "Screenshot 05")
+![alt text](/screenshots/main.jpg "Main screen")
+![alt text](/screenshots/ssh.jpg "SSH screen")
+![alt text](/screenshots/info.jpg "Info screen")
+![alt text](/screenshots/system.jpg "System screen")
+![alt text](/screenshots/cpu.jpg "CPU/RAM screen")
+![alt text](/screenshots/display.jpg "Display screen")
+![alt text](/screenshots/rdp.jpg "RDP screen")
+![alt text](/screenshots/audio.jpg "Audio screen")
+![alt text](/screenshots/storage.jpg "Storage screen")
+![alt text](/screenshots/usb.jpg "USB screen")
+![alt text](/screenshots/usbatach.jpg "USB attach screen")
+![alt text](/screenshots/snapshot.jpg "Snapshot screen")
+![alt text](/screenshots/task.jpg "Task screen")
+![alt text](/screenshots/vmserver.jpg "VM info screen")
+![alt text](/screenshots/newhdd.jpg "New HDD info screen")
 
 ## Q & A
 Q: Where are the server data stored ?  
@@ -49,7 +69,7 @@ C:\Users\<USERNAME>>\AppData\Roaming\fyne\com.bytemystery.vboxssh\preferences.js
 Q: Where are the passwords for SSH access are stored ?  
 >A: They are encrypted stored in the preferences.json file.  
 
-Q: I hav eforgotten my master password. How to recover ?
+Q: I have forgotten my master password. How to recover ?
 >A: Recovering is not possible.  
 Quit the application, delete the preferences.json file and restart application.  
 Now you can set a new master password, but I need to give the data for the servers again.

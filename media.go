@@ -148,7 +148,7 @@ func (m *MediaHelper) selectImage(fOk func(vm.MediaInfo), fAddNewMedia func(), f
 	dia.Show()
 	m.mainWindow.Canvas().Focus(m.sel)
 	si := m.mainWindow.Canvas().Size()
-	dia.Resize(fyne.NewSize(si.Width*m.windowScale, si.Height*m.windowScale))
+	dia.Resize(fyne.NewSize(si.Width*m.windowScale, dia.MinSize().Height*1.2))
 }
 
 func (m *MediaHelper) addNewFddMedia() {
