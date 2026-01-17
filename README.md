@@ -60,11 +60,10 @@ For Mac: I can not compile because MacOS is needed. - But if someone has a Mac y
 
 ### Binaries
 #### Linux (64 Bit)
-[Tar file] https://github.com/bytemystery-com/vboxssh/blob/master/dist/linux/VBoxSsh.tarxz
-
-[Standalone binary](./dist/linux/vboxssh)  
+[Tar file](https://github.com/bytemystery-com/vboxssh/releases/download/v0.2.0/VBoxSsh.tar.xz)  
+[Standalone binary](https://github.com/bytemystery-com/vboxssh/releases/download/v0.2.0/vboxssh)  
 #### Windows (64 Bit)
-[Standalone exe](./dist/windows/VBoxSsh.exe)  
+[Standalone exe](https://github.com/bytemystery-com/vboxssh/releases/download/v0.2.0/VBoxSsh.exe)  
 #### Mac
 Not available - it could be buil but requires Mac + SDK.
 #### Android 
