@@ -28,9 +28,10 @@ import (
 	"embed"
 	"errors"
 	"image/color"
+	"net/http"
 	"time"
 
-	//	_ "net/http/pprof"
+	_ "net/http/pprof"
 
 	"bytemystery-com/vboxssh/crypt"
 
@@ -187,19 +188,10 @@ func (f *forcedVariant) Color(name fyne.ThemeColorName, _ fyne.ThemeVariant) col
 }
 
 func main() {
-	/*
-		f, err := os.Create("cpu.prof")
-		if err != nil {
-			panic(err)
-		}
-		defer f.Close()
-		pprof.StartCPUProfile(f)
-		defer pprof.StopCPUProfile()
-
-		go func() {
-			http.ListenAndServe("localhost:6060", nil)
-		}()
-	*/
+	//  go tool pprof http://localhost:6060/debug/pprof/profile?seconds=30
+	go func() {
+		http.ListenAndServe("localhost:6060", nil)
+	}()
 
 	Gui.App = app.NewWithID("com.bytemystery.vboxssh")
 

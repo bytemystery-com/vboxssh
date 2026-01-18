@@ -38,7 +38,7 @@ const (
 	VBOXMANAGE_APP    = "VBoxManage"
 	VM_PROP_KEY_STATE = "VMState"
 	MAX_LOG_ENTRIES   = 25
-	DEBUG             = true
+	DEBUG             = false
 )
 
 type RunState int

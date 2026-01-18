@@ -9,6 +9,8 @@ For getting the actual status of the virtual machines polling is used.
 
 VBoxSsh is written in [Go](https://go.dev/) and uses [Fyne](https://fyne.io/) as graphical toolkit.
 
+[Repository](https://github.com/bytemystery-com/vboxssh)
+
 
 Author: Reiner Pröls  
 Licence: MIT  
