@@ -233,6 +233,12 @@ func main() {
 	Gui.MenuItems["menu.server.disconnect"] = m
 	m.Shortcut = &desktop.CustomShortcut{KeyName: fyne.KeyN, Modifier: fyne.KeyModifierControl}
 
+	if !Gui.IsDesktop {
+		m = fyne.NewMenuItem(lang.X("menu.server.quit", "Quit"), doQuit)
+		Gui.MenuItems["menu.server.quit"] = m
+		// m.Shortcut = &desktop.CustomShortcut{KeyName: fyne.KeyX, Modifier: fyne.KeyModifierControl}
+	}
+
 	Gui.MenuServer = fyne.NewMenu(lang.X("menu.server", "Server"),
 		Gui.MenuItems["menu.server.add"],
 		Gui.MenuItems["menu.server.remove"],
@@ -240,6 +246,8 @@ func main() {
 		Gui.MenuItems["menu.server.connect"],
 		Gui.MenuItems["menu.server.reconnect"],
 		Gui.MenuItems["menu.server.disconnect"],
+		fyne.NewMenuItemSeparator(),
+		Gui.MenuItems["menu.server.quit"],
 	)
 	eMenu := fyne.NewMenu(lang.X("menu.edit", "Edit"),
 		fyne.NewMenuItem(lang.X("menu.edit.appearance", "Appearance"), showAppearanceDialog))
@@ -487,4 +495,8 @@ func fixScroll(scroll *container.Scroll) {
 			})
 		}
 	}()
+}
+
+func doQuit() {
+	CloseApp()
 }

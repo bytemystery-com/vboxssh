@@ -57,18 +57,18 @@ As user you have to choose the account on which VirtualBox runs e.g. vbox in my 
 ## Precompiled binaries
 In the dist folder are precompiled binaries for Windows (64-Bit) and Linux (64-Bit).  
 Apk file for Android will come in future.  
-For Mac: I can not compile because MacOS is needed. - But if someone has a Mac you can try it.
+For Mac: I can not compile because MacOS is needed. - But if someone has a Mac you can try it and give me feedback.
 
 ### Binaries
 #### Linux (64 Bit)
-[Tar file](https://github.com/bytemystery-com/vboxssh/releases/download/v0.2.0/VBoxSsh.tar.xz)  
-[Standalone binary](https://github.com/bytemystery-com/vboxssh/releases/download/v0.2.0/vboxssh)  
+[Tar file](https://github.com/bytemystery-com/vboxssh/releases/download/v0.2.1/VBoxSsh.tar.xz)  
+[Standalone binary](https://github.com/bytemystery-com/vboxssh/releases/download/v0.2.1/vboxssh)  
 #### Windows (64 Bit)
-[Standalone exe](https://github.com/bytemystery-com/vboxssh/releases/download/v0.2.0/VBoxSsh.exe)  
+[Standalone exe](https://github.com/bytemystery-com/vboxssh/releases/download/v0.2.1/VBoxSsh.exe)  
 #### Mac
-Not available - it could be buil but requires Mac + SDK.
+Not available - it could be build but requires Mac + SDK.
 #### Android 
-Will come in future.
+[APK](https://github.com/bytemystery-com/vboxssh/releases/download/v0.2.1/VBoxSsh.apk)  
 
 ## Q & A
 Q: Where are the server data stored ?  
