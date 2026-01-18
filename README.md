@@ -54,12 +54,7 @@ As user you have to choose the account on which VirtualBox runs e.g. vbox in my 
 ![alt text](/screenshots/vmserver.jpg "VM info screen")
 ![alt text](/screenshots/newhdd.jpg "New HDD info screen")
 
-## Precompiled binaries
-In the dist folder are precompiled binaries for Windows (64-Bit) and Linux (64-Bit).  
-Apk file for Android will come in future.  
-For Mac: I can not compile because MacOS is needed. - But if someone has a Mac you can try it and give me feedback.
-
-### Binaries
+### Precompiled binaries
 #### Linux (64 Bit)
 [Tar file](https://github.com/bytemystery-com/vboxssh/releases/download/v0.2.1/VBoxSsh.tar.xz)  
 [Standalone binary](https://github.com/bytemystery-com/vboxssh/releases/download/v0.2.1/vboxssh)  
