@@ -36,11 +36,13 @@ ts=$(date -u +'%Y-%m-%d - %H:%M:%S')
 fyne translate assets/lang/xx.json
 echo "Build windows ..."
 CGO_ENABLED=1 CXX=${CXX_WIN} CC=${CC_WIN} GOOS=windows GOARCH=amd64 fyne package --release --metadata buildts="${ts}"
+mkdir -p dist/windows
 mv VBoxSsh.exe dist/windows
 
 echo "Build linux ..."
 CGO_ENABLED=1 GOOS=linux GOARCH=amd64 fyne package --release --metadata buildts="${ts}"
 CGO_ENABLED=1 GOOS=linux GOARCH=amd64 fyne build --release --metadata buildts="${ts}"
+mkdir -p dist/linux
 mv vboxssh dist/linux
 mv VBoxSsh.tar.xz dist/linux
 
@@ -65,4 +67,5 @@ if [[ -f "${ANDROID_KEY}" ]] ; then
 fi
 PATH=${OLD_PATH}
 TOOLCHAIN=${OLD_TOOLCHAIN}
+mkdir -p dist/android
 mv VBoxSsh.apk dist/android
