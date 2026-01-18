@@ -48,7 +48,6 @@ As user you have to choose the account on which VirtualBox runs e.g. vbox in my 
 ![alt text](/screenshots/audio.jpg "Audio screen")
 ![alt text](/screenshots/storage.jpg "Storage screen")
 ![alt text](/screenshots/usb.jpg "USB screen")
-![alt text](/screenshots/usbatach.jpg "USB attach screen")
 ![alt text](/screenshots/snapshot.jpg "Snapshot screen")
 ![alt text](/screenshots/task.jpg "Task screen")
 ![alt text](/screenshots/vmserver.jpg "VM info screen")
