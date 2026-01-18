@@ -63,6 +63,7 @@ As user you have to choose the account on which VirtualBox runs e.g. vbox in my 
 Not available - it could be build but requires Mac + SDK.
 #### Android 
 [APK](https://github.com/bytemystery-com/vboxssh/releases/download/v0.2.1/VBoxSsh.apk)  
+(needs a tablet in landscape mode)
 
 ## Q & A
 Q: Where are the server data stored ?  
