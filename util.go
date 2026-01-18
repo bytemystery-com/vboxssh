@@ -293,8 +293,12 @@ func loadIconsForTheme() {
 }
 
 func CloseApp() {
-	Gui.MainWindow.Close()
-	Gui.App.Quit()
+	if Gui.IsDesktop {
+		Gui.MainWindow.Close()
+		Gui.App.Quit()
+	} else {
+		LogOut()
+	}
 }
 
 func CheckMasterKey() bool {
@@ -332,7 +336,7 @@ func LoadData() {
 	// saveServers(Data.ServerMap, Gui.MasterPassword)
 }
 
-func logOut() {
+func LogOut() {
 	showPasswordDialog(func(pass string) {
 		pass, err := crypt.Encrypt(crypt.InternPassword, pass)
 		if err != nil {
@@ -344,12 +348,12 @@ func logOut() {
 			dia := dialog.NewError(errors.New(lang.X("msg.masterpassword_wrong", "Masterpassword is wrong !!")), Gui.MainWindow)
 			dia.Show()
 			dia.SetOnClosed(func() {
-				logOut()
+				LogOut()
 			})
 		} else {
 		}
 	}, func() {
-		logOut()
+		LogOut()
 	}, false)
 }
 

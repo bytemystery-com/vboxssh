@@ -34,6 +34,7 @@ import (
 	_ "net/http/pprof"
 
 	"bytemystery-com/vboxssh/crypt"
+	"bytemystery-com/vboxssh/util"
 
 	"bytemystery-com/vboxssh/data"
 
@@ -233,12 +234,6 @@ func main() {
 	Gui.MenuItems["menu.server.disconnect"] = m
 	m.Shortcut = &desktop.CustomShortcut{KeyName: fyne.KeyN, Modifier: fyne.KeyModifierControl}
 
-	if !Gui.IsDesktop {
-		m = fyne.NewMenuItem(lang.X("menu.server.quit", "Quit"), doQuit)
-		Gui.MenuItems["menu.server.quit"] = m
-		// m.Shortcut = &desktop.CustomShortcut{KeyName: fyne.KeyX, Modifier: fyne.KeyModifierControl}
-	}
-
 	Gui.MenuServer = fyne.NewMenu(lang.X("menu.server", "Server"),
 		Gui.MenuItems["menu.server.add"],
 		Gui.MenuItems["menu.server.remove"],
@@ -246,8 +241,6 @@ func main() {
 		Gui.MenuItems["menu.server.connect"],
 		Gui.MenuItems["menu.server.reconnect"],
 		Gui.MenuItems["menu.server.disconnect"],
-		fyne.NewMenuItemSeparator(),
-		Gui.MenuItems["menu.server.quit"],
 	)
 	eMenu := fyne.NewMenu(lang.X("menu.edit", "Edit"),
 		fyne.NewMenuItem(lang.X("menu.edit.appearance", "Appearance"), showAppearanceDialog))
@@ -297,6 +290,7 @@ func main() {
 
 	Gui.Toolbar.Append(widget.NewToolbarSeparator())
 
+	//	if Gui.IsDesktop {
 	t = widget.NewToolbarAction(Gui.IconImport, doImport)
 	Gui.ToolbarActions["import"] = t
 	Gui.Toolbar.Append(t)
@@ -311,8 +305,9 @@ func main() {
 	Gui.Toolbar.Append(t)
 
 	Gui.Toolbar.Append(widget.NewToolbarSeparator())
+	//	}
 
-	t = widget.NewToolbarAction(theme.LogoutIcon(), logOut)
+	t = widget.NewToolbarAction(theme.LogoutIcon(), LogOut)
 	Gui.ToolbarActions["logout"] = t
 	Gui.Toolbar.Append(t)
 
@@ -397,19 +392,31 @@ func main() {
 	Gui.DetailsScroll = container.NewVScroll(Gui.Details)
 	fixScroll(Gui.DetailsScroll)
 
-	Gui.StartButton = picbutton.NewPicButton(Gui.PicStartU.StaticContent, Gui.PicStartD.StaticContent, nil, Gui.PicStartD.StaticContent, true, ButtonStart, nil)
-	Gui.PauseButton = picbutton.NewPicButton(Gui.PicPauseU.StaticContent, Gui.PicPauseD.StaticContent, nil, Gui.PicPauseD.StaticContent, true, ButtonPause, nil)
-	Gui.SaveButton = picbutton.NewPicButton(Gui.PicSaveU.StaticContent, Gui.PicSaveD.StaticContent, nil, Gui.PicSaveD.StaticContent, true, ButtonSave, nil)
-	Gui.ResetButton = picbutton.NewPicButton(Gui.PicResetU.StaticContent, Gui.PicResetD.StaticContent, nil, nil, false, ButtonReset, nil)
-	Gui.OffButton = picbutton.NewPicButton(Gui.PicOffU.StaticContent, Gui.PicOffD.StaticContent, nil, Gui.PicOffD.StaticContent, true, ButtonOff, nil)
-	Gui.ShutdownButton = picbutton.NewPicButton(Gui.PicShutdownU.StaticContent, Gui.PicShutdownD.StaticContent, nil, nil, false, ButtonShutdown, nil)
-	Gui.DiscardButton = picbutton.NewPicButton(Gui.PicDiscardU.StaticContent, Gui.PicDiscardD.StaticContent, nil, nil, false, ButtonDiscard, nil)
+	padding := true
+	/*
+		if !Gui.IsDesktop {
+			padding = false
+		}
+	*/
+
+	Gui.StartButton = picbutton.NewPicButtonEx(Gui.PicStartU.StaticContent, Gui.PicStartD.StaticContent, nil, Gui.PicStartD.StaticContent, true, padding, 0, ButtonStart, nil)
+	Gui.PauseButton = picbutton.NewPicButtonEx(Gui.PicPauseU.StaticContent, Gui.PicPauseD.StaticContent, nil, Gui.PicPauseD.StaticContent, true, padding, 0, ButtonPause, nil)
+	Gui.SaveButton = picbutton.NewPicButtonEx(Gui.PicSaveU.StaticContent, Gui.PicSaveD.StaticContent, nil, Gui.PicSaveD.StaticContent, true, padding, 0, ButtonSave, nil)
+	Gui.ResetButton = picbutton.NewPicButtonEx(Gui.PicResetU.StaticContent, Gui.PicResetD.StaticContent, nil, nil, false, padding, 0, ButtonReset, nil)
+	Gui.OffButton = picbutton.NewPicButtonEx(Gui.PicOffU.StaticContent, Gui.PicOffD.StaticContent, nil, Gui.PicOffD.StaticContent, true, padding, 0, ButtonOff, nil)
+	Gui.ShutdownButton = picbutton.NewPicButtonEx(Gui.PicShutdownU.StaticContent, Gui.PicShutdownD.StaticContent, nil, nil, false, padding, 0, ButtonShutdown, nil)
+	Gui.DiscardButton = picbutton.NewPicButtonEx(Gui.PicDiscardU.StaticContent, Gui.PicDiscardD.StaticContent, nil, nil, false, padding, 0, ButtonDiscard, nil)
 
 	Gui.ButtonLine = container.NewHBox(Gui.StartButton, Gui.SaveButton, Gui.ShutdownButton, Gui.PauseButton, Gui.OffButton, Gui.ResetButton, Gui.DiscardButton)
 	Gui.ButtonLineBack = canvas.NewRectangle(color.NRGBA{R: 192, G: 192, B: 192, A: 255})
 	vbox := container.NewBorder(container.NewStack(Gui.ButtonLineBack, Gui.ButtonLine), nil, nil, nil, Gui.DetailsScroll)
 
-	Gui.Split = container.NewHSplit(Gui.Tree, vbox)
+	// H-Split refuses to work in portrait mode on
+	treeSpace := 8
+	if !Gui.IsDesktop {
+		treeSpace = 26
+	}
+	Gui.Split = container.NewHSplit(container.NewStack(util.NewHFiller(float32(treeSpace)), Gui.Tree), vbox)
 	Gui.Split.Offset = 0.25
 
 	Gui.OuterBorderLayout = container.NewBorder(Gui.Toolbar, Gui.StartusBar, nil, nil, Gui.Split)
@@ -495,8 +502,4 @@ func fixScroll(scroll *container.Scroll) {
 			})
 		}
 	}()
-}
-
-func doQuit() {
-	CloseApp()
 }
