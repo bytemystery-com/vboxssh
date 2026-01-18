@@ -415,6 +415,7 @@
     "menu.server.add": "Add",
     "menu.server.connect": "Connect",
     "menu.server.disconnect": "Disconnect",
+    "menu.server.quit": "Quit",
     "menu.server.reconnect": "Reconnect",
     "menu.server.remove": "Remove",
     "msg.masterpassword_wrong": "Masterpassword is wrong !!",
