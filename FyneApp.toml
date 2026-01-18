@@ -11,4 +11,4 @@ Build = 55
 GenericName = "Virtualbox Frontend"
 Categories = ["System"]
 Comment = "Manage VirtualBox locally and over SSH"
-Keywords = ["virtualbox", "ssh"]
+Keywords = ["virtualbox", "ssh", "frontend"]
