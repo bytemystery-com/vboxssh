@@ -90,7 +90,7 @@ On older VirtualBox some features as secure boot are not available.
 ## Links
 [Readme](https://bytemystery-com.github.io/vboxssh/)  
 [Repository](https://github.com/bytemystery-com/vboxssh/)  
-[Issues] (https://github.com/bytemystery-com/vboxssh/issues)  
+[Issues](https://github.com/bytemystery-com/vboxssh/issues)  
 [Discussions](https://github.com/bytemystery-com/vboxssh/discussions/new)  
 
 © Copyright Reiner Prölsk, 2026
