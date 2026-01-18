@@ -1,3 +1,5 @@
+![alt text](/assets/icons/icon.png "Logo")
+
 # VBoxSsh
 VBoxSsh is a graphical platform independent front end for managing and administrating VirtualBox instances in your network.  
 VBoxSsh uses only SSH connections and VBoxManage - no need for a Webserver, additional services and so on.
