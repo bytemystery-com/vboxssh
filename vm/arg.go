@@ -415,6 +415,35 @@ func argTranslate(value any) (string, error) {
 		default:
 			return "", errors.New("wrong MAC import format type")
 		}
+
+	case CloneModeType:
+		switch v {
+		case CloneMode_machine:
+			strVal = "machine"
+		case CloneMode_machineandchildren:
+			strVal = "machineandchildren"
+		case CloneMode_all:
+			strVal = "all"
+		default:
+			return "", errors.New("wrong Clone mode format type")
+		}
+	case CloneOptionsType:
+		switch v {
+		case CloneOption_none:
+			strVal = ""
+		case CloneOption_link:
+			strVal = "link"
+		case CloneOption_keepallmacs:
+			strVal = "keepallmac"
+		case CloneOption_keepnatmacs:
+			strVal = "Keepnatmacs"
+		case CloneOption_keepdiscnames:
+			strVal = "keepdisknames"
+		case CloneOption_keephwuuids:
+			strVal = "keephwuuids"
+		default:
+			return "", errors.New("wrong Clone mode format type")
+		}
 	default:
 		return "", errors.New("wrong value type")
 	}

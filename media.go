@@ -322,24 +322,31 @@ func (m *MediaHelper) createNewHddMedia() {
 				s.DeleteFile(m.vmServer.Client.Client, file)
 			}
 		}
-		statusText := ""
 		m.ShowNewHddPropertyDialog(lang.X("details.vm_storage.addmedia.create.title", "New HDD properties"), file,
 			func(format vm.MediaFormatType, size int64, fixedSize bool) {
+				uuid := uuid.NewString()
+
+				name := lang.X("details.vm_storge.createmedium.task.name", "Create media")
+				Gui.TasksInfos.AddTask(uuid, name, "")
+				OpenTaskDetails()
+				ResetStatus()
+
 				go func() {
 					err := s.CreateMedia(&s.Client, vm.Media_disk, size, &format, &fixedSize, file, util.WriterFunc(func(p []byte) (int, error) {
-						s := string(p)
-						statusText += s
-						SetStatusText(statusText, MsgWarning)
+						Gui.TasksInfos.UpdateTaskStatus(uuid, string(p), true)
 						return len(p), nil
 					}))
 					if err != nil {
-						SetStatusText(fmt.Sprintf(lang.X("details.vm_storge.createmedium.error", "Create medium failed with: %s"), err.Error()), MsgError)
+						t := fmt.Sprintf(lang.X("details.vm_storge.createmedium.done.error", "Create medium on server '%s' failed"), s.Name)
+						SetStatusText(t, MsgError)
+						Gui.TasksInfos.AbortTask(uuid, t, false)
 					} else {
+						t := fmt.Sprintf(lang.X("details.vm_storge.createmedium.done.ok", "Medium on server '%s' was created"), s.Name)
+						Gui.TasksInfos.FinishTask(uuid, t, false)
+						SendNotification(lang.X("details.vm_storge.createmedium.notification.title", "Medium created exported"), t)
 						fyne.Do(func() {
 							m.hdds, m.uuidMapToHdd, err = s.GetHddMedias()
 							m.tree.Refresh()
-							SetStatusText(fmt.Sprintf(lang.X("details.vm_storge.createmedium.ok", "Medium %s was created"), file), MsgInfo)
-							SendNotification(lang.X("details.vm_storge.createmedium.notification.title", "Medium was created "), fmt.Sprintf(lang.X("details.vm_storge.createmedium.ok", "Medium %s was created"), file))
 						})
 					}
 				}()

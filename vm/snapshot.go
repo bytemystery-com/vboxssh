@@ -34,8 +34,8 @@ func (m *VMachine) TakeSnapshot(client *VmSshClient, name, description string, l
 		if !client.IsLocal {
 			description = "$'" + description + "'"
 		}
+		opt = append(opt, description)
 	}
-	opt = append(opt, description)
 	if live {
 		opt = append(opt, "--live")
 	}

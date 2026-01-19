@@ -258,7 +258,7 @@ func (s *SftpFileBrowser) ResetActualDir() error {
 
 func (s *SftpFileBrowser) Show(w fyne.Window, windowScale float32, fOk func(string, os.FileInfo, string)) {
 	server := util.GetServerAddressAsString(s.sshClient)
-	s.server = colorlabel.NewColorLabel(fmt.Sprintf(lang.X("filebrowser.server", "Server: %s"), server), theme.Color(theme.ColorNamePrimary), nil, 1.0)
+	s.server = colorlabel.NewColorLabel(fmt.Sprintf(lang.X("filebrowser.server", "Server: %s"), server), theme.ColorNamePrimary, nil, 1.0)
 	s.server.SetTextStyle(&fyne.TextStyle{
 		Bold: true,
 	})

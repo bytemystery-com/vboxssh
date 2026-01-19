@@ -34,7 +34,6 @@ import (
 	_ "net/http/pprof"
 
 	"bytemystery-com/vboxssh/crypt"
-	"bytemystery-com/vboxssh/util"
 
 	"bytemystery-com/vboxssh/data"
 
@@ -248,11 +247,14 @@ func main() {
 	Gui.MenuItems["menu.machine.import"] = fyne.NewMenuItem(lang.X("menu.machine.import", "Import"), doImport)
 	Gui.MenuItems["menu.machine.export"] = fyne.NewMenuItem(lang.X("menu.machine.export", "Export"), doExport)
 	Gui.MenuItems["menu.machine.create"] = fyne.NewMenuItem(lang.X("menu.machine.create", "Create"), doCreateVm)
+	Gui.MenuItems["menu.machine.clone"] = fyne.NewMenuItem(lang.X("menu.machine.clone", "Clone"), doCloneVm)
 	Gui.MenuItems["menu.machine.delete"] = fyne.NewMenuItem(lang.X("menu.machine.delete", "Delete"), doDeleteVm)
 
 	mMenu := fyne.NewMenu(lang.X("menu.machine", "Machine"),
 		Gui.MenuItems["menu.machine.import"],
 		Gui.MenuItems["menu.machine.export"],
+		fyne.NewMenuItemSeparator(),
+		Gui.MenuItems["menu.machine.clone"],
 		fyne.NewMenuItemSeparator(),
 		Gui.MenuItems["menu.machine.create"],
 		Gui.MenuItems["menu.machine.delete"],
@@ -265,6 +267,12 @@ func main() {
 	Gui.StartusBar.SetTruncate(true)
 
 	Gui.Toolbar = widget.NewToolbar()
+
+	if !Gui.IsDesktop {
+		t := widget.NewToolbarAction(theme.ContentAddIcon(), addNewServer)
+		Gui.ToolbarActions["addserver"] = t
+		Gui.Toolbar.Append(t)
+	}
 
 	t := widget.NewToolbarAction(theme.ContentAddIcon(), addNewServer)
 	Gui.ToolbarActions["addserver"] = t
@@ -303,6 +311,9 @@ func main() {
 	t = widget.NewToolbarAction(theme.DeleteIcon(), doDeleteVm)
 	Gui.ToolbarActions["delete"] = t
 	Gui.Toolbar.Append(t)
+	t = widget.NewToolbarAction(theme.ContentCopyIcon(), doCloneVm)
+	Gui.ToolbarActions["clone"] = t
+	Gui.Toolbar.Append(t)
 
 	Gui.Toolbar.Append(widget.NewToolbarSeparator())
 	//	}
@@ -311,10 +322,12 @@ func main() {
 	Gui.ToolbarActions["logout"] = t
 	Gui.Toolbar.Append(t)
 
-	Gui.Toolbar.Append(widget.NewToolbarSpacer())
-	t = widget.NewToolbarAction(theme.HelpIcon(), doHelp)
-	Gui.ToolbarActions["help"] = t
-	Gui.Toolbar.Append(t)
+	if Gui.IsDesktop {
+		Gui.Toolbar.Append(widget.NewToolbarSpacer())
+		t = widget.NewToolbarAction(theme.HelpIcon(), doHelp)
+		Gui.ToolbarActions["help"] = t
+		Gui.Toolbar.Append(t)
+	}
 
 	t = widget.NewToolbarAction(theme.InfoIcon(), showInfoDialog)
 	Gui.ToolbarActions["info"] = t
@@ -411,12 +424,7 @@ func main() {
 	Gui.ButtonLineBack = canvas.NewRectangle(color.NRGBA{R: 192, G: 192, B: 192, A: 255})
 	vbox := container.NewBorder(container.NewStack(Gui.ButtonLineBack, Gui.ButtonLine), nil, nil, nil, Gui.DetailsScroll)
 
-	// H-Split refuses to work in portrait mode on
-	treeSpace := 8
-	if !Gui.IsDesktop {
-		treeSpace = 26
-	}
-	Gui.Split = container.NewHSplit(container.NewStack(util.NewHFiller(float32(treeSpace)), Gui.Tree), vbox)
+	Gui.Split = container.NewHSplit(Gui.Tree, container.NewHScroll(vbox))
 	Gui.Split.Offset = 0.25
 
 	Gui.OuterBorderLayout = container.NewBorder(Gui.Toolbar, Gui.StartusBar, nil, nil, Gui.Split)

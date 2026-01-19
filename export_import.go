@@ -198,6 +198,8 @@ func (e *ExportHelper) doOvaExport() {
 		name := fmt.Sprintf(lang.X("export.task.name", "Export OVA %s"), util.GetFilename(e.file.Text))
 		Gui.TasksInfos.AddTask(uuid, name, "")
 		OpenTaskDetails()
+		ResetStatus()
+
 		err := e.vmServer.ExportOva(&e.vmServer.Client, machines,
 			e.formatMapIndexToType[e.format.SelectedIndex()], e.mnifest.Checked, e.iso.Checked,
 			e.macMapIndexToType[e.mac.SelectedIndex()], vsys, e.file.Text, util.WriterFunc(func(p []byte) (int, error) {
@@ -486,6 +488,8 @@ func (i *ImportHelper) doImportOva(file string) {
 		name := fmt.Sprintf(lang.X("import.task.name", "Import OVA %s"), util.GetFilename(file))
 		Gui.TasksInfos.AddTask(uuid, name, "")
 		OpenTaskDetails()
+		ResetStatus()
+
 		s := ""
 		err := i.vmServer.ImportOva(&i.vmServer.Client, i.macMapIndexToType[i.mac.SelectedIndex()], i.vdi.Checked,
 			file, vsys, util.WriterFunc(func(p []byte) (int, error) {

@@ -55,15 +55,15 @@ As user you have to choose the account on which VirtualBox runs e.g. vbox in my 
 
 ### Precompiled binaries
 #### Linux (64 Bit)
-[Tar file](https://github.com/bytemystery-com/vboxssh/releases/download/v0.2.2/VBoxSsh.tar.xz)  
-[Standalone binary](https://github.com/bytemystery-com/vboxssh/releases/download/v0.2.2/vboxssh)  
+[Tar file](https://github.com/bytemystery-com/vboxssh/releases/download/v0.2.3/VBoxSsh.tar.xz)  
+[Standalone binary](https://github.com/bytemystery-com/vboxssh/releases/download/v0.2.3/vboxssh)  
 #### Windows (64 Bit)
-[Standalone exe](https://github.com/bytemystery-com/vboxssh/releases/download/v0.2.2/VBoxSsh.exe)  
+[Standalone exe](https://github.com/bytemystery-com/vboxssh/releases/download/v0.2.3/VBoxSsh.exe)  
 #### Mac
 Not available - it could be build but requires Mac + SDK.
 #### Android 
-[APK](https://github.com/bytemystery-com/vboxssh/releases/download/v0.2.2/VBoxSsh.apk)  
-(needs a tablet in landscape mode)
+[APK](https://github.com/bytemystery-com/vboxssh/releases/download/v0.2.3/VBoxSsh.apk)  
+(tablet in landscape mode is recommended)
 
 ## Q & A
 Q: Where are the server data stored ?  

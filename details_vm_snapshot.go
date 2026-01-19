@@ -118,12 +118,14 @@ func (snap *SnapshotTab) take() {
 				name := fmt.Sprintf(lang.X("snapshot.take.msg", "Take snapshot of '%s'"), v.Name)
 				Gui.TasksInfos.AddTask(uuid, name, "")
 				OpenTaskDetails()
+				ResetStatus()
+
 				err := v.TakeSnapshot(&s.Client, nameEntry.Text, "", false, util.WriterFunc(func(p []byte) (int, error) {
 					Gui.TasksInfos.UpdateTaskStatus(uuid, string(p), true)
 					return len(p), nil
 				}))
 				if err != nil {
-					t := fmt.Sprintf(lang.X("snapshot.take.done.error", "snapshot '%s' of '%s' failed"), nameEntry.Text, v.Name)
+					t := fmt.Sprintf(lang.X("snapshot.take.done.error", "Snapshot '%s' of '%s' failed"), nameEntry.Text, v.Name)
 					SetStatusText(t, MsgError)
 					Gui.TasksInfos.AbortTask(uuid, t, false)
 				} else {
@@ -157,6 +159,8 @@ func (snap *SnapshotTab) restore() {
 				name := fmt.Sprintf(lang.X("snapshot.restore.msg", "Restore to snapshot '%s'"), snap.selectedItem.name)
 				Gui.TasksInfos.AddTask(uuid, name, "")
 				OpenTaskDetails()
+				ResetStatus()
+
 				err := v.RestoreSnapshot(&s.Client, snap.selectedItem.uuid, util.WriterFunc(func(p []byte) (int, error) {
 					Gui.TasksInfos.UpdateTaskStatus(uuid, string(p), true)
 					return len(p), nil
@@ -192,6 +196,8 @@ func (snap *SnapshotTab) delete() {
 				name := fmt.Sprintf(lang.X("snapshot.delete.msg", "Delete snapshot '%s'"), snap.selectedItem.name)
 				Gui.TasksInfos.AddTask(uuid, name, "")
 				OpenTaskDetails()
+				ResetStatus()
+
 				err := v.DeleteSnapshot(&s.Client, snap.selectedItem.uuid, util.WriterFunc(func(p []byte) (int, error) {
 					Gui.TasksInfos.UpdateTaskStatus(uuid, string(p), true)
 					return len(p), nil
@@ -373,6 +379,7 @@ func (snap *SnapshotTab) updateToolbarButtons() {
 		snap.toolTake.Disable()
 		return
 	}
+	snap.toolTake.Enable()
 	state, err := v.GetState()
 	if err == nil {
 		if (state == vm.RunState_aborted || state == vm.RunState_off) &&

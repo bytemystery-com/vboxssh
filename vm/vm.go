@@ -394,6 +394,25 @@ type ExtPackInfoType struct {
 	WhyUnsable string
 }
 
+type CloneModeType int
+
+const (
+	CloneMode_machine CloneModeType = iota
+	CloneMode_machineandchildren
+	CloneMode_all
+)
+
+type CloneOptionsType int
+
+const (
+	CloneOption_none CloneOptionsType = iota
+	CloneOption_link
+	CloneOption_keepallmacs
+	CloneOption_keepnatmacs
+	CloneOption_keepdiscnames
+	CloneOption_keephwuuids
+)
+
 type VmSshClient struct {
 	Client  *ssh.Client
 	IsLocal bool

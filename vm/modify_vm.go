@@ -26,6 +26,7 @@ package vm
 
 import (
 	"fmt"
+	"io"
 )
 
 func (m *VMachine) SetCpus(client *VmSshClient, cpus int, callBack func(uuid string)) error {
@@ -188,6 +189,67 @@ func (m *VMachine) DeleteVm(v *VmServer, del bool) error {
 	}
 
 	lines, err := RunCmd(&v.Client, VBOXMANAGE_APP, opt, nil, nil)
+	_ = lines
+	return err
+}
+
+func (m *VMachine) CloneVm(v *VmServer, newName string, mode CloneModeType, link, macs, diskNames, hwUuids CloneOptionsType, snapShotName string, statusWriter io.Writer) error {
+	opt := []any{"clonevm", m.UUID}
+	opt = append(opt, "--mode", mode)
+	opt = append(opt, "--name", v.Client.quoteArgString(newName))
+	opStr := ""
+	if link != CloneOption_none {
+		if opStr != "" {
+			opStr += ","
+		}
+		s, err := argTranslate(link)
+		if err != nil {
+			return err
+		}
+		opStr += s
+	}
+	if macs != CloneOption_none {
+		if opStr != "" {
+			opStr += ","
+		}
+		s, err := argTranslate(macs)
+		if err != nil {
+			return err
+		}
+		opStr += s
+	}
+	if diskNames != CloneOption_none {
+		if opStr != "" {
+			opStr += ","
+		}
+		s, err := argTranslate(diskNames)
+		if err != nil {
+			return err
+		}
+		opStr += s
+	}
+	if hwUuids != CloneOption_none {
+		if opStr != "" {
+			opStr += ","
+		}
+		s, err := argTranslate(hwUuids)
+		if err != nil {
+			return err
+		}
+		opStr += s
+	}
+	opt = append(opt, "--options", v.Client.quoteArgString(opStr))
+	opt = append(opt, "--register")
+	if link != CloneOption_none {
+		opt = append(opt, "--snapshot", v.Client.quoteArgString(snapShotName))
+	}
+
+	optStr, err := argPreProcess("", opt)
+	if err != nil {
+		return err
+	}
+
+	lines, err := RunCmd(&v.Client, VBOXMANAGE_APP, optStr, nil, statusWriter)
 	_ = lines
 	return err
 }

@@ -25,6 +25,8 @@
 package main
 
 import (
+	"bytemystery-com/vboxssh/vm"
+
 	"fyne.io/fyne/v2"
 )
 
@@ -57,15 +59,6 @@ func UpdateToolbarMenu() {
 	t := Gui.ToolbarActions["create"]
 	if t != nil {
 		if s != nil && s.IsConnected() {
-			t.Enable()
-		} else {
-			t.Disable()
-		}
-	}
-
-	t = Gui.ToolbarActions["delete"]
-	if t != nil {
-		if s != nil && s.IsConnected() && m != nil {
 			t.Enable()
 		} else {
 			t.Disable()
@@ -110,7 +103,70 @@ func UpdateToolbarMenu() {
 				m.Disabled = true
 			}
 		}
+	}
 
+	mc := Gui.MenuItems["menu.machine.clone"]
+	md := Gui.MenuItems["menu.machine.delete"]
+	tc := Gui.ToolbarActions["clone"]
+	td := Gui.ToolbarActions["delete"]
+	if s != nil && m != nil && s.IsConnected() {
+		state, err := m.GetState()
+		if err == nil {
+			if state == vm.RunState_aborted || state == vm.RunState_off || state == vm.RunState_saved {
+				if mc != nil {
+					mc.Disabled = false
+				}
+				if md != nil {
+					md.Disabled = false
+				}
+				if td != nil {
+					td.Enable()
+				}
+				if tc != nil {
+					tc.Enable()
+				}
+			} else {
+				if mc != nil {
+					mc.Disabled = true
+				}
+				if md != nil {
+					md.Disabled = true
+				}
+				if td != nil {
+					td.Disable()
+				}
+				if tc != nil {
+					tc.Disable()
+				}
+			}
+		} else {
+			if mc != nil {
+				mc.Disabled = true
+			}
+			if md != nil {
+				md.Disabled = true
+			}
+			if td != nil {
+				td.Disable()
+			}
+			if tc != nil {
+				tc.Disable()
+			}
+		}
+
+	} else {
+		if mc != nil {
+			mc.Disabled = true
+		}
+		if md != nil {
+			md.Disabled = true
+		}
+		if td != nil {
+			td.Disable()
+		}
+		if tc != nil {
+			tc.Disable()
+		}
 	}
 
 	if isServerSelected() {
