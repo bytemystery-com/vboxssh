@@ -46,13 +46,14 @@ type oldInfoType struct {
 }
 
 type InfoTab struct {
-	oldValues   oldInfoType
-	version     *widget.Label
-	cfgLocation *colorlabel.ColorLabel
-	name        *widget.Entry
-	os          *widget.Select
-	osVersion   *widget.Select
-	description *widget.Entry
+	oldValues      oldInfoType
+	version        *widget.Label
+	guestAdditions *widget.Label
+	cfgLocation    *colorlabel.ColorLabel
+	name           *widget.Entry
+	os             *widget.Select
+	osVersion      *widget.Select
+	description    *widget.Entry
 
 	apply   *widget.Button
 	tabItem *container.TabItem
@@ -65,6 +66,7 @@ func NewInfoTab() *InfoTab {
 
 	// Info
 	infoTab.version = widget.NewLabel("")
+	infoTab.guestAdditions = widget.NewLabel("")
 	infoTab.cfgLocation = colorlabel.NewColorLabel("", "", "", 1.0)
 	infoTab.cfgLocation.SetTruncateMode(colorlabel.Begin)
 	infoTab.name = widget.NewEntry()
@@ -87,6 +89,7 @@ func NewInfoTab() *InfoTab {
 
 	grid := container.New(layout.NewFormLayout(),
 		widget.NewLabel(lang.X("details.vm_info.version", "VM Version")), infoTab.version,
+		widget.NewLabel(lang.X("details.vm_info.guestadditions", "Guest additions")), infoTab.guestAdditions,
 		widget.NewLabel(lang.X("details.vm_info.cfglocation", "Location")), infoTab.cfgLocation,
 		widget.NewLabel(lang.X("details.vm_info.name", "Name")), infoTab.name,
 		widget.NewLabel(lang.X("details.vm_info.os", "Operating system")), infoTab.os,
@@ -192,6 +195,14 @@ func (info *InfoTab) UpdateBySelect() {
 	info.setVersionTypes(s, v)
 	location := v.Properties["CfgFile"]
 	info.cfgLocation.SetText(location)
+
+	gav := v.Properties["GuestAdditionsVersion"]
+	gar := v.Properties["GuestAdditionsRunLevel"]
+	if gav != "" {
+		info.guestAdditions.SetText(fmt.Sprintf(lang.X("details.vm_info.guestadditions.template", "Version: %s, RunLevel: %s"), gav, gar))
+	} else {
+		info.guestAdditions.SetText("-------")
+	}
 
 	name := v.Properties["name"]
 	info.name.SetText(name)
