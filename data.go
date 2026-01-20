@@ -39,8 +39,8 @@ import (
 	"fyne.io/fyne/v2/storage"
 )
 
-func saveServers(servers map[string]*vm.VmServer, masterKey string) error {
-	var list []vm.VmServer
+func saveServers(servers []*vm.VmServer, masterKey string) error {
+	list := make([]vm.VmServer, 0, len(servers))
 	pass, err := crypt.Decrypt(crypt.InternPassword, masterKey)
 	if err != nil {
 		return err
@@ -128,5 +128,5 @@ func loadServers(masterKey string) ([]vm.VmServer, error) {
 }
 
 func SaveServers() {
-	saveServers(Data.ServerMap, Gui.MasterPassword)
+	saveServers(Data.GetServers(true), Gui.MasterPassword)
 }

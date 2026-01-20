@@ -26,12 +26,10 @@ package data
 
 import (
 	"errors"
-	"fmt"
-	"maps"
-	"slices"
 	"strings"
 	"sync"
 
+	"bytemystery-com/vboxssh/omap"
 	"bytemystery-com/vboxssh/server"
 	"bytemystery-com/vboxssh/vm"
 )
@@ -42,16 +40,16 @@ const (
 )
 
 type VmData struct {
-	ServerMap      map[string]*vm.VmServer            // server UUID -> *VMserver
-	ServerMapVmMap map[string]map[string]*vm.VMachine // server UUID, VMs
-	Lock           *sync.RWMutex
+	Lock       *sync.RWMutex
+	ServerList omap.OMap[string, *vm.VmServer]             // server UUID -> vmserver
+	VmList     map[string]*omap.OMap[string, *vm.VMachine] // server UUID -> List of VMs
 }
 
 func NewVmData() *VmData {
 	return &VmData{
-		Lock:           new(sync.RWMutex),
-		ServerMap:      make(map[string]*vm.VmServer, DEFAULT_NUMBER_OF_SERVERS),
-		ServerMapVmMap: make(map[string]map[string]*vm.VMachine, DEFAULT_NUMBER_OF_VMS_PER_SERVER),
+		Lock:       new(sync.RWMutex),
+		ServerList: omap.NewOMap[string, *vm.VmServer](DEFAULT_NUMBER_OF_SERVERS),
+		VmList:     make(map[string]*omap.OMap[string, *vm.VMachine], DEFAULT_NUMBER_OF_SERVERS),
 	}
 }
 
@@ -64,20 +62,85 @@ func (v *VmData) LoadData(servers []vm.VmServer) {
 		vmNew.DvdImagesPath = item.DvdImagesPath
 		vmNew.HddImagesPath = item.HddImagesPath
 		vmNew.OvaPath = item.OvaPath
-		v.ServerMap[vmNew.UUID] = &vmNew
-		v.ServerMapVmMap[vmNew.UUID] = make(map[string]*vm.VMachine, DEFAULT_NUMBER_OF_VMS_PER_SERVER)
+		v.ServerList.Add(vmNew.UUID, &vmNew)
+		m := omap.NewOMap[string, *vm.VMachine](DEFAULT_NUMBER_OF_VMS_PER_SERVER)
+		v.VmList[vmNew.UUID] = &m
 	}
-	for _, s := range v.ServerMap {
+	v.sortServerList(false)
+	for _, s := range v.ServerList.GetValues() {
 		go s.Connect(nil, nil)
 	}
+}
+
+func (v *VmData) sortVmList(lock bool, uuid string) {
+	if lock {
+		v.Lock.Lock()
+		defer v.Lock.Unlock()
+	}
+	v.VmList[uuid].Sort(func(a, b *vm.VMachine) int {
+		A := a.Name
+		B := b.Name
+		an := strings.ToLower(A)
+		bn := strings.ToLower(B)
+		if an == bn {
+			if A < B {
+				return -1
+			}
+			if A > B {
+				return 1
+			}
+			return 0
+		}
+		if an < bn {
+			return -1
+		}
+		return 1
+	})
+}
+
+func (v *VmData) sortServerList(lock bool) {
+	if lock {
+		v.Lock.Lock()
+		defer v.Lock.Unlock()
+	}
+	v.ServerList.Sort(func(a, b *vm.VmServer) int {
+		A := a.Name
+		B := b.Name
+		an := strings.ToLower(A)
+		bn := strings.ToLower(B)
+		if an == bn {
+			if A < B {
+				return -1
+			}
+			if A > B {
+				return 1
+			}
+			return 0
+		}
+		if an < bn {
+			return -1
+		}
+		return 1
+	})
+}
+
+func (v *VmData) GetNumberOfServers(lock bool) int {
+	if lock {
+		v.Lock.RLock()
+		defer v.Lock.RUnlock()
+	}
+	return v.ServerList.Len()
 }
 
 func (v *VmData) AddData(server server.Server, fOk func(), fErr func(error)) *vm.VmServer {
 	v.Lock.Lock()
 	defer v.Lock.Unlock()
 	vmNew := vm.NewVmServer(server)
-	v.ServerMap[vmNew.UUID] = &vmNew
-	v.ServerMapVmMap[vmNew.UUID] = make(map[string]*vm.VMachine, DEFAULT_NUMBER_OF_VMS_PER_SERVER)
+	v.ServerList.Add(vmNew.UUID, &vmNew)
+	m := omap.NewOMap[string, *vm.VMachine](DEFAULT_NUMBER_OF_VMS_PER_SERVER)
+	v.VmList[vmNew.UUID] = &m
+
+	v.sortServerList(false)
 	go vmNew.Connect(fOk, fErr)
 	return &vmNew
 }
@@ -85,114 +148,61 @@ func (v *VmData) AddData(server server.Server, fOk func(), fErr func(error)) *vm
 func (v *VmData) RemoveData(s *vm.VmServer) {
 	v.Lock.Lock()
 	defer v.Lock.Unlock()
-	delete(v.ServerMap, s.UUID)
-	delete(v.ServerMapVmMap, s.UUID)
+	v.ServerList.RemoveByKey(s.UUID)
+	delete(v.VmList, s.UUID)
 }
 
+// Called from tree
 func (v *VmData) GetServer(uuid string, lock bool) *vm.VmServer {
 	if lock {
 		v.Lock.RLock()
 		defer v.Lock.RUnlock()
 	}
-	s, ok := v.ServerMap[uuid]
-	if !ok {
-		return nil
-	}
-	return s
+	return v.ServerList.GetByKey(uuid)
 }
 
+// Called from tree (update)
 func (v *VmData) GetVm(serverUuid, vmUuid string, lock bool) *vm.VMachine {
 	if lock {
 		v.Lock.RLock()
 		defer v.Lock.RUnlock()
 	}
-	vma := v.ServerMapVmMap[serverUuid][vmUuid]
-	return vma
+	m := v.VmList[serverUuid]
+	if m == nil {
+		return nil
+	}
+	return m.GetByKey(vmUuid)
 }
 
-func (v *VmData) GetVms(serverUuid string, sorted, lock bool) []*vm.VMachine {
+// Called from tree
+func (v *VmData) GetVms(serverUuid string, lock bool) []*vm.VMachine {
 	if lock {
 		v.Lock.RLock()
+		defer v.Lock.RUnlock()
 	}
-	data, ok := v.ServerMapVmMap[serverUuid]
-	if lock {
-		v.Lock.RUnlock()
-	}
-	if !ok {
+	m := v.VmList[serverUuid]
+	if m == nil {
 		return nil
 	}
-	vms := slices.Collect(maps.Values(data))
-	if vms == nil {
-		return nil
-	}
-	if !sorted {
-		return vms
-	}
-
-	slices.SortFunc(vms, func(a, b *vm.VMachine) int {
-		A := a.Name
-		B := b.Name
-		an := strings.ToLower(A)
-		bn := strings.ToLower(B)
-		if an == bn {
-			if A < B {
-				return -1
-			}
-			if A > B {
-				return 1
-			}
-			return 0
-		}
-		if an < bn {
-			return -1
-		}
-		return 1
-	})
-	return vms
+	return m.GetValues()
 }
 
+// Called from tree
 func (v *VmData) GetServers(lock bool) []*vm.VmServer {
 	if lock {
 		v.Lock.RLock()
+		defer v.Lock.RUnlock()
 	}
-	servers := slices.Collect(maps.Values(v.ServerMap))
-	if lock {
-		v.Lock.RUnlock()
-	}
-	if servers == nil {
-		return nil
-	}
-
-	slices.SortFunc(servers, func(a, b *vm.VmServer) int {
-		A := a.Name
-		B := b.Name
-		an := strings.ToLower(A)
-		bn := strings.ToLower(B)
-
-		if an == bn {
-			if A < B {
-				return -1
-			}
-			if A > B {
-				return 1
-			}
-			return 0
-		}
-		if an < bn {
-			return -1
-		}
-		return 1
-	})
-	return servers
+	return v.ServerList.GetValues()
 }
 
 func (v *VmData) UpdateVmList(serverUuid string) error {
 	// TODO
 	if v.Lock.TryLock() {
 		defer v.Lock.Unlock()
-		fmt.Println("update vm list for", serverUuid)
-		s, ok := v.ServerMap[serverUuid]
-		if !ok {
+		// fmt.Println("update vm list for", serverUuid)
+		s := v.GetServer(serverUuid, false)
+		if s == nil {
 			return errors.New("unknown server uuid")
 		}
 		if !s.IsConnected() {
@@ -202,11 +212,16 @@ func (v *VmData) UpdateVmList(serverUuid string) error {
 		if err != nil {
 			return err
 		}
-		m := v.ServerMapVmMap[serverUuid]
-		clear(m)
-		for _, item := range vms {
-			m[item.UUID] = item
+
+		m := v.VmList[serverUuid]
+		if m == nil {
+			return errors.New("unknown server uuid 2")
 		}
+		m.Clear()
+		for _, item := range vms {
+			m.Add(item.UUID, item)
+		}
+		v.sortVmList(false, serverUuid)
 		return nil
 	} else {
 		return errors.New("already locked")

@@ -64,8 +64,10 @@ func treeGetChilds(id widget.TreeNodeID) []widget.TreeNodeID {
 		count++
 	*/
 	if id == "" {
-		childs := make([]widget.TreeNodeID, 0, len(Data.ServerMap))
-		for _, item := range Data.GetServers(true) {
+		Data.Lock.RLock()
+		defer Data.Lock.RUnlock()
+		childs := make([]widget.TreeNodeID, 0, Data.GetNumberOfServers(false))
+		for _, item := range Data.GetServers(false) {
 			childs = append(childs, item.UUID)
 		}
 		return childs
@@ -74,9 +76,7 @@ func treeGetChilds(id widget.TreeNodeID) []widget.TreeNodeID {
 		if vmid != "" {
 			return nil
 		}
-		Data.Lock.RLock()
-		vms := Data.GetVms(sid, true, false)
-		Data.Lock.RUnlock()
+		vms := Data.GetVms(sid, true)
 
 		if vms == nil {
 			// fmt.Println("No Vms yet", id)
@@ -248,9 +248,7 @@ func treeUpdateVmStatus(serverUuid, vmUuid string, lock bool) {
 }
 
 func treeUpdateAllVms(s *vm.VmServer, delay int) {
-	Data.Lock.RLock()
-	vms := Data.GetVms(s.UUID, false, false)
-	Data.Lock.RUnlock()
+	vms := Data.GetVms(s.UUID, true)
 	if len(vms) > 0 {
 		delay /= len(vms)
 		for _, vma := range vms {
@@ -265,7 +263,7 @@ func treeUpdateAllVms(s *vm.VmServer, delay int) {
 func treeUpdateAll(delay int) bool {
 	var wg sync.WaitGroup
 	wasDone := false
-	for _, s := range Data.ServerMap {
+	for _, s := range Data.GetServers(true) {
 		if Gui.Tree.IsBranchOpen(s.UUID) && s.IsConnected() {
 			// fmt.Println("Status update for", s.Name)
 			wasDone = true

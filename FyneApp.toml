@@ -5,7 +5,7 @@ Icon = "assets/icons/icon.png"
 Name = "VBoxSsh"
 ID = "com.bytemystery.vboxssh"
 Version = "0.2.3"
-Build = 84
+Build = 87
 
 [LinuxAndBSD]
 GenericName = "Virtualbox Frontend"

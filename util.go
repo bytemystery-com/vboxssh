@@ -330,7 +330,7 @@ func LoadData() {
 	Data.LoadData(servers)
 	Gui.Tree.Refresh()
 	vms := Data.GetServers(true)
-	if vms != nil {
+	if len(vms) > 0 {
 		Gui.Tree.Select(vms[0].UUID)
 	}
 	// saveServers(Data.ServerMap, Gui.MasterPassword)
