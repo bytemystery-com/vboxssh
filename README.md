@@ -84,6 +84,12 @@ Now you can set a new master password, but I need to give the data for the serve
 I have tested with VirtualBox 7.2.4 and with 6.1.50.  
 On older VirtualBox some features as secure boot are not available.  
 
+## Statistics
+The project with the 2 extra modules I developped for it  
+([PicButton](https://bytemystery-com.github.io/picbutton/) and [ColorLabel](https://bytemystery-com.github.io/colorlabel/))  
+consists of round about 15000 lines of go code.
+
+
 ## Links
 [Readme](https://bytemystery-com.github.io/vboxssh/)  
 [Repository](https://github.com/bytemystery-com/vboxssh/)  
