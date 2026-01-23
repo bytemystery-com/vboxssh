@@ -35,10 +35,11 @@ import (
 )
 
 const (
-	VBOXMANAGE_APP    = "VBoxManage"
-	VM_PROP_KEY_STATE = "VMState"
-	MAX_LOG_ENTRIES   = 25
-	DEBUG             = false
+	VBOXMANAGE_APP              = "VBoxManage"
+	VM_PROP_KEY_STATE           = "VMState"
+	MAX_LOG_ENTRIES             = 25
+	DEBUG                       = false
+	EXTRADATA_STARTINWINDOW_KEY = "/user/.vboxssh/startinwindow"
 )
 
 type RunState int
@@ -411,6 +412,14 @@ const (
 	CloneOption_keepnatmacs
 	CloneOption_keepdiscnames
 	CloneOption_keephwuuids
+)
+
+type StartInWindowType int
+
+const (
+	StartInWindow_default StartInWindowType = iota
+	StartInWindow_yes
+	StartInWindow_no
 )
 
 type VmSshClient struct {

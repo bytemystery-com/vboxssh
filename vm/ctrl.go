@@ -57,6 +57,18 @@ var (
 	regexVMInfo2USb1 = regexp.MustCompile(`^OHCI USB:\s+(.+)`)
 	regexVMInfo2USb2 = regexp.MustCompile(`^EHCI USB:\s+(.+)`)
 	regexVMInfo2USb3 = regexp.MustCompile(`^xHCI USB:\s+(.+)`)
+
+	// Shared folders
+	// Shared folders:              <none>
+	// Shared folders:
+
+	// Name: 'reiner', Host path: '/home/reiner' (machine mapping), writable, auto-mount, mount-point: '/home/reiner/host'
+	// Name: 'data', Host path: '/home/reiner/data' (machine mapping), readonly, mount-point: '/media/xxx'
+	// Name: 'reiner', Host path: '/home/reiner' (machine mapping), writable
+	// Recording status:            stopped
+
+	regexVMInfo2SharedFolders0 = regexp.MustCompile(`^Shared folders:\s*(.*)`)
+	regexVMInfo2SharedFolders1 = regexp.MustCompile(`^Name:\s*'(.*)',\s*Host path:\s*'(.*)'\s*\((.*)\s+mapping\),\s*(writable|readonly)\s*(?:,\s*(auto-mount))?(?:,\s*mount-point:\s*'(.*)')?`)
 )
 
 func (m *VMachine) GetState() (RunState, error) {
@@ -264,7 +276,44 @@ func (m *VMachine) updateStatusEx(client *VmSshClient) error {
 	if m.Properties == nil {
 		m.Properties = make(map[string]string, len(lines))
 	}
+	inSsf := false
+	ssfCount := 0
 	for _, line := range lines {
+		if inSsf {
+			if line == "" {
+				if ssfCount > 0 {
+					inSsf = false
+				}
+			} else {
+				// Name: 'reiner', Host path: '/home/reiner' (machine mapping), writable, auto-mount, mount-point: '/home/reiner/host'
+				// Name: 'data', Host path: '/home/reiner/data' (machine mapping), readonly, mount-point: '/media/xxx'
+				items := regexVMInfo2SharedFolders1.FindStringSubmatch(line)
+				if len(items) == 7 {
+					m.Properties[fmt.Sprintf("ssfName%d", ssfCount+1)] = items[1]
+					m.Properties[fmt.Sprintf("ssfHostPath%d", ssfCount+1)] = items[2]
+					if strings.ToLower(items[3]) == "machine" {
+						m.Properties[fmt.Sprintf("ssfMapping%d", ssfCount+1)] = "machchine"
+					} else {
+						m.Properties[fmt.Sprintf("ssfMapping%d", ssfCount+1)] = "global"
+					}
+					if strings.ToLower(items[4]) == "readonly" {
+						m.Properties[fmt.Sprintf("ssfReadOnly%d", ssfCount+1)] = "true"
+					} else {
+						m.Properties[fmt.Sprintf("ssfReadOnly%d", ssfCount+1)] = "false"
+					}
+					if strings.ToLower(items[5]) == "auto-mount" {
+						m.Properties[fmt.Sprintf("ssfAutoMount%d", ssfCount+1)] = "true"
+					} else {
+						m.Properties[fmt.Sprintf("ssfAutoMount%d", ssfCount+1)] = "false"
+					}
+					m.Properties[fmt.Sprintf("ssfMountPoint%d", ssfCount+1)] = items[6]
+
+					ssfCount++
+				}
+			}
+			continue
+		}
+
 		items := regexVMInfo2Audio1.FindStringSubmatch(line)
 		if len(items) == 2 {
 			items = regexVMInfo2Audio2.FindStringSubmatch(items[1])
@@ -319,6 +368,16 @@ func (m *VMachine) updateStatusEx(client *VmSshClient) error {
 				m.Properties["usb3"] = "on"
 			} else {
 				m.Properties["usb3"] = "off"
+			}
+			continue
+		}
+		items = regexVMInfo2SharedFolders0.FindStringSubmatch(line)
+		if len(items) == 2 {
+			if items[1] == "<none>" {
+				m.Properties["ssf"] = "no"
+			} else {
+				m.Properties["ssf"] = "yes"
+				inSsf = true
 			}
 			continue
 		}

@@ -196,13 +196,7 @@ func (info *InfoTab) UpdateBySelect() {
 	location := v.Properties["CfgFile"]
 	info.cfgLocation.SetText(location)
 
-	gav := v.Properties["GuestAdditionsVersion"]
-	gar := v.Properties["GuestAdditionsRunLevel"]
-	if gav != "" {
-		info.guestAdditions.SetText(fmt.Sprintf(lang.X("details.vm_info.guestadditions.template", "Version: %s, RunLevel: %s"), gav, gar))
-	} else {
-		info.guestAdditions.SetText("-------")
-	}
+	info.updateGuestAdditionsInfo()
 
 	name := v.Properties["name"]
 	info.name.SetText(name)
@@ -211,6 +205,21 @@ func (info *InfoTab) UpdateBySelect() {
 	description := v.Properties["description"]
 	info.description.SetText(description)
 	info.oldValues.description = description
+}
+
+func (info *InfoTab) updateGuestAdditionsInfo() {
+	_, v := getActiveServerAndVm()
+	if v == nil {
+		return
+	}
+
+	gav := v.Properties["GuestAdditionsVersion"]
+	gar := v.Properties["GuestAdditionsRunLevel"]
+	if gav != "" {
+		info.guestAdditions.SetText(fmt.Sprintf(lang.X("details.vm_info.guestadditions.template", "Version: %s, RunLevel: %s"), gav, gar))
+	} else {
+		info.guestAdditions.SetText("-------")
+	}
 }
 
 // called from status updates
@@ -231,6 +240,7 @@ func (info *InfoTab) UpdateByStatus() {
 			info.osVersion.Disable()
 			info.description.Enable()
 			info.apply.Enable()
+			info.updateGuestAdditionsInfo() // only available when running
 
 		case vm.RunState_saved:
 			info.name.Enable()

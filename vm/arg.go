@@ -444,6 +444,17 @@ func argTranslate(value any) (string, error) {
 		default:
 			return "", errors.New("wrong Clone mode format type")
 		}
+	case StartInWindowType:
+		switch v {
+		case StartInWindow_default:
+			strVal = "default"
+		case StartInWindow_yes:
+			strVal = "yes"
+		case StartInWindow_no:
+			strVal = "no"
+		default:
+			return "", errors.New("wrong Start in Window type")
+		}
 	default:
 		return "", errors.New("wrong value type")
 	}

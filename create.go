@@ -76,7 +76,7 @@ func doDeleteVm() {
 		return
 	}
 
-	label := widget.NewLabel(m.Name)
+	label := widget.NewLabel(fmt.Sprintf(lang.X("delete.msg", "Delete VM '%s' on '%s' ?"), m.Name, s.Name))
 	del := widget.NewCheck(lang.X("delete.all", "Delete all files"), nil)
 	item1 := widget.NewFormItem("", del)
 	item2 := widget.NewFormItem("", label)

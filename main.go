@@ -125,6 +125,11 @@ type GUI struct {
 	IconExport_x *fyne.StaticResource
 	IconImport_x *fyne.StaticResource
 
+	IconGlobal    *fyne.StaticResource
+	IconReadOnly  *fyne.StaticResource
+	IconWriteable *fyne.StaticResource
+	IconAutomount *fyne.StaticResource
+
 	Settings         *Preferences
 	ActiveItemServer string
 	ActiveItemVm     string
@@ -152,21 +157,22 @@ type GUI struct {
 	VmNetworkTab       *container.AppTabs
 	VmStorageContainer *fyne.Container
 
-	ServerSshTab     *ServerSshInfos
-	ServerVmTab      *VmServerInfos
-	VmInfoTab        *InfoTab
-	VmCpuRamTab      *CpuRamTab
-	VmDisplayTab     *DisplayTab
-	VmAudioTab       *AudioTab
-	VmRdpTab         *RdpTab
-	VmSystemTab      *SystemTab
-	VmNetworkTabs    []*NetworkTab
-	VmStorageContent *StorageContent
-	VmUsbTab         *UsbTab
-	VmUsbAttachTab   *UsbAttachTab
-	VmSnapshotTab    *SnapshotTab
-	TasksInfos       *TasksInfos
-	DetailObjs       []DetailsInterface
+	ServerSshTab      *ServerSshInfos
+	ServerVmTab       *VmServerInfos
+	VmInfoTab         *InfoTab
+	VmCpuRamTab       *CpuRamTab
+	VmDisplayTab      *DisplayTab
+	VmAudioTab        *AudioTab
+	VmRdpTab          *RdpTab
+	VmSystemTab       *SystemTab
+	VmNetworkTabs     []*NetworkTab
+	VmStorageContent  *StorageContent
+	VmUsbTab          *UsbTab
+	VmUsbAttachTab    *UsbAttachTab
+	VmSnapshotTab     *SnapshotTab
+	VmSharedFolderTab *SharedFolderTab
+	TasksInfos        *TasksInfos
+	DetailObjs        []DetailsInterface
 }
 
 var Gui = GUI{
@@ -374,6 +380,9 @@ func main() {
 	Gui.VmSnapshotTab = NewSnapshotTab()
 	Gui.DetailObjs = append(Gui.DetailObjs, Gui.VmSnapshotTab)
 
+	Gui.VmSharedFolderTab = NewSharedFolderTab()
+	Gui.DetailObjs = append(Gui.DetailObjs, Gui.VmSharedFolderTab)
+
 	Gui.VmServerTabs = container.NewAppTabs(Gui.ServerSshTab.tabItem, Gui.ServerVmTab.tabItem)
 
 	Gui.SShServerDetails = widget.NewAccordionItem(lang.X("details.server", "Server"), Gui.VmServerTabs)
@@ -381,7 +390,7 @@ func main() {
 	Gui.VmInfoTabs = container.NewAppTabs(
 		Gui.VmInfoTab.tabItem, Gui.VmSystemTab.tabItem, Gui.VmCpuRamTab.tabItem,
 		Gui.VmDisplayTab.tabItem, Gui.VmRdpTab.tabItem, Gui.VmAudioTab.tabItem, Gui.VmStorageContent.tabItem,
-		Gui.VmUsbTab.tabItem, Gui.VmUsbAttachTab.tabItem, Gui.VmSnapshotTab.tabItem)
+		Gui.VmUsbTab.tabItem, Gui.VmUsbAttachTab.tabItem, Gui.VmSnapshotTab.tabItem, Gui.VmSharedFolderTab.tabItem)
 	Gui.VmInfoDetails = widget.NewAccordionItem(lang.X("details.vm_info", "VM - General"), Gui.VmInfoTabs)
 
 	for i := 0; i < NUMBER_OF_NICS; i++ {
@@ -475,6 +484,7 @@ func main() {
 		Gui.VmStorageContent.UpdateToolBarIcons()
 		updateToolBarIcons()
 		Gui.ServerVmTab.extPackList.Refresh()
+		Gui.VmSharedFolderTab.list.Refresh()
 	})
 
 	if desk, ok := Gui.App.(desktop.App); ok {

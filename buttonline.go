@@ -29,6 +29,7 @@ import (
 
 	"bytemystery-com/vboxssh/vm"
 
+	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/lang"
 )
 
@@ -38,9 +39,19 @@ func ButtonStart() {
 		return
 	}
 	SetStatusText(fmt.Sprintf(lang.X("details.vm_ctrl.start.started", "VM '%s' was started ..."), v.Name), MsgInfo)
-	go v.Start(&s.Client, !s.IsLocal(), func(err error) {
+	headless := false
+	startMode, err := v.GetStartInWindow(s)
+	if err == nil {
+		if startMode == vm.StartInWindow_no || (startMode == vm.StartInWindow_default && !s.IsLocal()) {
+			headless = true
+		}
+	}
+	go v.Start(&s.Client, headless, func(err error) {
 		if err != nil {
 			SetStatusText(fmt.Sprintf(lang.X("details.vm_ctrl.start.error", "Start of VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+			fyne.Do(func() {
+				Gui.StartButton.SetDown(false)
+			})
 		} else {
 			ResetStatus()
 		}
@@ -52,10 +63,12 @@ func ButtonPause() {
 	if s == nil || v == nil {
 		return
 	}
-	err := v.Pause(&s.Client, VMStatusUpdateCallBack)
-	if err != nil {
-		SetStatusText(fmt.Sprintf(lang.X("details.vm_ctrl.pause.error", "Pause of VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-	}
+	go func() {
+		err := v.Pause(&s.Client, VMStatusUpdateCallBack)
+		if err != nil {
+			SetStatusText(fmt.Sprintf(lang.X("details.vm_ctrl.pause.error", "Pause of VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+		}
+	}()
 }
 
 func ButtonSave() {
@@ -78,10 +91,12 @@ func ButtonReset() {
 	if s == nil || v == nil {
 		return
 	}
-	err := v.Reset(&s.Client, VMStatusUpdateCallBack)
-	if err != nil {
-		SetStatusText(fmt.Sprintf(lang.X("details.vm_ctrl.reset.error", "Reset of VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-	}
+	go func() {
+		err := v.Reset(&s.Client, VMStatusUpdateCallBack)
+		if err != nil {
+			SetStatusText(fmt.Sprintf(lang.X("details.vm_ctrl.reset.error", "Reset of VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+		}
+	}()
 }
 
 func ButtonOff() {
@@ -89,10 +104,12 @@ func ButtonOff() {
 	if s == nil || v == nil {
 		return
 	}
-	err := v.Off(&s.Client, VMStatusUpdateCallBack)
-	if err != nil {
-		SetStatusText(fmt.Sprintf(lang.X("details.vm_ctrl.off.error", "Power off for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-	}
+	go func() {
+		err := v.Off(&s.Client, VMStatusUpdateCallBack)
+		if err != nil {
+			SetStatusText(fmt.Sprintf(lang.X("details.vm_ctrl.off.error", "Power off for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+		}
+	}()
 }
 
 func ButtonShutdown() {
@@ -115,10 +132,12 @@ func ButtonDiscard() {
 	if s == nil || v == nil {
 		return
 	}
-	err := v.DiscardSaveState(&s.Client, VMStatusUpdateCallBack)
-	if err != nil {
-		SetStatusText(fmt.Sprintf(lang.X("details.vm_ctrl.discard.error", "Discard of VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
-	}
+	go func() {
+		err := v.DiscardSaveState(&s.Client, VMStatusUpdateCallBack)
+		if err != nil {
+			SetStatusText(fmt.Sprintf(lang.X("details.vm_ctrl.discard.error", "Discard of VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+		}
+	}()
 }
 
 func UpdateButtons() {

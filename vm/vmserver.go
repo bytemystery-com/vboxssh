@@ -131,6 +131,11 @@ func NewVmServer(s server.Server) VmServer {
 	return v
 }
 
+func (v *VmServer) GetVmMajorVersion() (int, error) {
+	maj, _, err := v.getVmVersion()
+	return maj, err
+}
+
 func (v *VmServer) getVmVersion() (int, int, error) {
 	if v.Version == "" {
 		return 0, 0, errors.New("No version")

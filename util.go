@@ -290,6 +290,11 @@ func loadIconsForTheme() {
 
 	Gui.IconExport_x = loadIcon("assets/icons/"+dir+"/export_x.png", "icon_export_x")
 	Gui.IconImport_x = loadIcon("assets/icons/"+dir+"/import_x.png", "icon_import_x")
+
+	Gui.IconGlobal = loadIcon("assets/icons/"+dir+"/global.png", "icon_global")
+	Gui.IconReadOnly = loadIcon("assets/icons/"+dir+"/readonly.png", "icon_readonly")
+	Gui.IconWriteable = loadIcon("assets/icons/"+dir+"/writeable.png", "icon_writeable")
+	Gui.IconAutomount = loadIcon("assets/icons/"+dir+"/automount.png", "icon_automount")
 }
 
 func CloseApp() {

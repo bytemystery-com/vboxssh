@@ -25,9 +25,13 @@
 package vm
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	"regexp"
 )
+
+var regexExtraData = regexp.MustCompile(`^Value:\s*(.*)`)
 
 func (m *VMachine) SetCpus(client *VmSshClient, cpus int, callBack func(uuid string)) error {
 	return m.setProperty(client, "cpus", cpus, callBack)
@@ -188,8 +192,7 @@ func (m *VMachine) DeleteVm(v *VmServer, del bool) error {
 		}
 	}
 
-	lines, err := RunCmd(&v.Client, VBOXMANAGE_APP, opt, nil, nil)
-	_ = lines
+	_, err := RunCmd(&v.Client, VBOXMANAGE_APP, opt, nil, nil)
 	return err
 }
 
@@ -249,7 +252,82 @@ func (m *VMachine) CloneVm(v *VmServer, newName string, mode CloneModeType, link
 		return err
 	}
 
-	lines, err := RunCmd(&v.Client, VBOXMANAGE_APP, optStr, nil, statusWriter)
-	_ = lines
+	_, err = RunCmd(&v.Client, VBOXMANAGE_APP, optStr, nil, statusWriter)
 	return err
+}
+
+func (m *VMachine) AddSharedFolder(v *VmServer, name, hostPath, mountPath string, readOnly, autoMount, global bool, callBack func(uuid string)) error {
+	opt := []string{"sharedfolder", "add"}
+	maj, _, _ := v.getVmVersion()
+	if global && maj > 6 {
+		opt = append(opt, "global")
+	} else {
+		opt = append(opt, m.UUID)
+	}
+	opt = append(opt, "--name", v.Client.quoteArgString(name))
+	opt = append(opt, "--hostpath", v.Client.quoteArgString(hostPath))
+	if readOnly {
+		opt = append(opt, "--readonly")
+	}
+	if autoMount {
+		opt = append(opt, "--automount")
+	}
+	if mountPath != "" {
+		opt = append(opt, "--auto-mount-point", v.Client.quoteArgString(mountPath))
+	}
+	return m.setPropertyInternal(&v.Client, opt, true, callBack)
+}
+
+func (m *VMachine) RemoveSharedFolder(v *VmServer, name string, global bool, callBack func(uuid string)) error {
+	opt := []string{"sharedfolder", "remove"}
+	maj, _, _ := v.getVmVersion()
+	if global && maj > 6 {
+		opt = append(opt, "global")
+	} else {
+		opt = append(opt, m.UUID)
+	}
+	opt = append(opt, "--name", v.Client.quoteArgString(name))
+	return m.setPropertyInternal(&v.Client, opt, true, callBack)
+}
+
+func (m *VMachine) SetExtraData(v *VmServer, key, value string) error {
+	opt := []string{"setextradata", m.UUID, v.Client.quoteArgString(key), v.Client.quoteArgString(value)}
+	return m.setPropertyInternal(&v.Client, opt, true, nil)
+}
+
+func (m *VMachine) GetExtraData(v *VmServer, key string) (string, error) {
+	opt := []string{"getextradata", m.UUID, v.Client.quoteArgString(key)}
+	lines, err := m.runCmd(&v.Client, VBOXMANAGE_APP, opt, false, nil)
+	if err != nil {
+		return "", err
+	}
+	if len(lines) > 0 {
+		items := regexExtraData.FindStringSubmatch(lines[0])
+		if len(items) == 2 {
+			return items[1], nil
+		}
+	}
+	return "", errors.New("not found")
+}
+
+func (m *VMachine) GetStartInWindow(v *VmServer) (StartInWindowType, error) {
+	val, err := m.GetExtraData(v, EXTRADATA_STARTINWINDOW_KEY)
+	if err != nil {
+		return StartInWindow_default, err
+	}
+	if val == "yes" {
+		return StartInWindow_yes, nil
+	}
+	if val == "no" {
+		return StartInWindow_no, nil
+	}
+	return StartInWindow_default, nil
+}
+
+func (m *VMachine) SetStartInWindow(v *VmServer, startInWindow StartInWindowType) error {
+	str, err := argTranslate(startInWindow)
+	if err != nil {
+		return err
+	}
+	return m.SetExtraData(v, EXTRADATA_STARTINWINDOW_KEY, str)
 }

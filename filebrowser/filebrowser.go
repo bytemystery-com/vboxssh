@@ -262,12 +262,16 @@ func (s *SftpFileBrowser) Show(w fyne.Window, windowScale float32, fOk func(stri
 	s.server.SetTextStyle(&fyne.TextStyle{
 		Bold: true,
 	})
+	var dia *dialog.ConfirmDialog
 	s.label = widget.NewLabel("")
 	s.list = widget.NewList(s.listNumberOfItems, s.listCreateItem, s.listUpdateItem)
 	s.list.OnSelected = s.listOnSelected
 	s.list.OnUnselected = s.listOnUnSelected
 	s.name = widget.NewEntry()
 	s.name.PlaceHolder = lang.X("filebrowser.filename", "Filename")
+	s.name.OnSubmitted = func(string) {
+		dia.Confirm()
+	}
 
 	var c *fyne.Container
 	if s.mode == SftpFileBrowserMode_openfile || s.mode == SftpFileBrowserMode_selectdir {
@@ -275,7 +279,7 @@ func (s *SftpFileBrowser) Show(w fyne.Window, windowScale float32, fOk func(stri
 	} else {
 		c = container.NewBorder(container.NewVBox(s.server, s.label), container.NewVBox(util.NewVFiller(1.0), s.name, util.NewVFiller(1.0)), nil, nil, s.list)
 	}
-	dia := dialog.NewCustomConfirm(s.title,
+	dia = dialog.NewCustomConfirm(s.title,
 		lang.X("filebrowser.ok", "Ok"),
 		lang.X("filebrowser.cancel", "Cancel"),
 		c, func(ok bool) {

@@ -186,7 +186,7 @@ func NewCpuRamTab() *CpuRamTab {
 
 	c := container.NewVBox(container.NewHBox(gridWrap),
 		container.NewHBox(layout.NewSpacer(), cpuRamTab.apply, util.NewFiller(32, 0)))
-	cpuRamTab.tabItem = container.NewTabItem(lang.X("details.vm_info.tab.cpuram", "CPU /RAM"), c)
+	cpuRamTab.tabItem = container.NewTabItem(lang.X("details.vm_info.tab.cpuram", "CPU/RAM"), c)
 	return &cpuRamTab
 }
 

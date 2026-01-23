@@ -287,6 +287,9 @@ func (e *ExportHelper) Export() {
 			ok.Disable()
 		}
 	}
+	e.file.OnSubmitted = func(string) {
+		ok.OnTapped()
+	}
 	e.browse = widget.NewButton(lang.X("export.file.browse", "Browse"), e.doBrowse)
 	grid1 := container.New(layout.NewFormLayout(),
 		widget.NewLabel(lang.X("export.format", "Format")), e.format,

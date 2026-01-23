@@ -44,21 +44,26 @@ type oldDisplayType struct {
 	vgaRam        int
 	accel3D       bool
 	vgaController int
+	startInWindow vm.StartInWindowType
 }
 
 type DisplayTab struct {
 	oldValues oldDisplayType
 
-	ram        *widget.Slider
-	ramEntry   *widget.Entry
-	a3D        *widget.Check
-	controller *widget.Select
+	ram           *widget.Slider
+	ramEntry      *widget.Entry
+	a3D           *widget.Check
+	controller    *widget.Select
+	startInWindow *widget.Select
 
 	apply   *widget.Button
 	tabItem *container.TabItem
 
 	controllerMapStringToIndex map[string]int
 	controllerMapIndexToType   map[int]vm.VgaType
+
+	startInWindowMapIndexToType map[int]vm.StartInWindowType
+	startInWindowMapTypeToIndex map[vm.StartInWindowType]int
 
 	regexRam *regexp.Regexp
 }
@@ -67,9 +72,11 @@ var _ DetailsInterface = (*DisplayTab)(nil)
 
 func NewDisplayTab() *DisplayTab {
 	displayTab := DisplayTab{
-		controllerMapStringToIndex: map[string]int{"none": 0, "vboxvga": 1, "vmsvga": 2, "vboxsvga": 3},
-		controllerMapIndexToType:   map[int]vm.VgaType{0: vm.Vga_none, 1: vm.Vga_vboxvga, 2: vm.Vga_vmsvga, 3: vm.Vga_vboxsvga},
-		regexRam:                   regexp.MustCompile(`^([0-9]+)\s*.*`),
+		controllerMapStringToIndex:  map[string]int{"none": 0, "vboxvga": 1, "vmsvga": 2, "vboxsvga": 3},
+		controllerMapIndexToType:    map[int]vm.VgaType{0: vm.Vga_none, 1: vm.Vga_vboxvga, 2: vm.Vga_vmsvga, 3: vm.Vga_vboxsvga},
+		startInWindowMapIndexToType: map[int]vm.StartInWindowType{0: vm.StartInWindow_default, 1: vm.StartInWindow_yes, 2: vm.StartInWindow_no},
+		startInWindowMapTypeToIndex: map[vm.StartInWindowType]int{vm.StartInWindow_default: 0, vm.StartInWindow_yes: 1, vm.StartInWindow_no: 2},
+		regexRam:                    regexp.MustCompile(`^([0-9]+)\s*.*`),
 	}
 
 	displayTab.apply = widget.NewButton(lang.X("details.vm_display.apply", "Apply"), func() {
@@ -114,10 +121,17 @@ func NewDisplayTab() *DisplayTab {
 			displayTab.ram),
 	)
 
+	displayTab.startInWindow = widget.NewSelect([]string{
+		lang.X("details.vm_display.startinwindow.default", "Default"),
+		lang.X("details.vm_display.startinwindow.yes", "Gui"),
+		lang.X("details.vm_display.startinwindow.no", "Headless"),
+	},
+		nil)
+
 	grid2 := container.New(layout.NewFormLayout(),
 		displayTab.a3D, util.NewFiller(0, 0),
-		widget.NewLabel(lang.X("details.vm_display.vga", "Graphics controller")),
-		displayTab.controller,
+		widget.NewLabel(lang.X("details.vm_display.vga", "Graphics controller")), displayTab.controller,
+		widget.NewLabel(lang.X("details.vm_display.startinwindow", "Start mode")), displayTab.startInWindow,
 	)
 
 	gridWrap1 := container.NewGridWrap(fyne.NewSize(formWidth, grid1.MinSize().Height), grid1)
@@ -188,6 +202,14 @@ func (display *DisplayTab) UpdateBySelect() {
 
 	// Graphics controller
 	util.SelectEntryFromProperty(display.controller, v, "graphicscontroller", display.controllerMapStringToIndex, &display.oldValues.vgaController)
+
+	val, err := v.GetStartInWindow(s)
+	index, ok := display.startInWindowMapTypeToIndex[val]
+	if ok {
+		display.startInWindow.SetSelectedIndex(index)
+	}
+
+	display.oldValues.startInWindow = val
 }
 
 // called from status updates
@@ -200,14 +222,16 @@ func (display *DisplayTab) UpdateByStatus() {
 		}
 		switch state {
 		case vm.RunState_unknown, vm.RunState_running, vm.RunState_paused, vm.RunState_meditation, vm.RunState_saved:
-			display.DisableAll()
+			display.ram.Disable()
+			display.ramEntry.Disable()
+			display.a3D.Disable()
+			display.controller.Disable()
 
 		case vm.RunState_off, vm.RunState_aborted:
 			display.ram.Enable()
 			display.ramEntry.Enable()
 			display.a3D.Enable()
 			display.controller.Enable()
-			display.apply.Enable()
 		default:
 			SetStatusText(lang.X("status.unknown_vm_state", "!!! Unknown VM state !!!"), MsgError)
 		}
@@ -267,6 +291,21 @@ func (display *DisplayTab) Apply() {
 								display.oldValues.vgaController = index
 							}
 						}()
+					}
+				}
+			}
+		}
+
+		if !display.startInWindow.Disabled() {
+			index := display.startInWindow.SelectedIndex()
+			if index >= 0 {
+				val, _ := display.startInWindowMapIndexToType[index]
+				if val != display.oldValues.startInWindow {
+					err := v.SetStartInWindow(s, val)
+					if err != nil {
+						SetStatusText(fmt.Sprintf(lang.X("details.vm_display.setstartinwindow.error", "Set start in window for VM '%s' failed."), v.Name), MsgError)
+					} else {
+						display.oldValues.startInWindow = val
 					}
 				}
 			}
