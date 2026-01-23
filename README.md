@@ -86,7 +86,7 @@ On older VirtualBox some features as secure boot are not available.
 
 ## Statistics
 The project with the 2 extra modules I developped for it  
-([PicButton](https://bytemystery-com.github.io/picbutton/) and [ColorLabel](https://bytemystery-com.github.io/colorlabel/))  
+([PicButton](https://github.com/bytemystery-com/picbutton) and [ColorLabel](https://github.com/bytemystery-com/colorlabel))  
 consists of round about 15000 lines of go code.
 
 

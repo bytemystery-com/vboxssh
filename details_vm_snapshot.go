@@ -223,6 +223,7 @@ func (snap *SnapshotTab) treeSelected(id widget.TreeNodeID) {
 
 func (snap *SnapshotTab) treeUnSelected(id widget.TreeNodeID) {
 	snap.selectedItem = nil
+	_ = id
 	snap.updateToolbarButtons()
 }
 
