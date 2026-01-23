@@ -5,7 +5,7 @@ go 1.25.5
 require (
 	fyne.io/fyne/v2 v2.7.2
 	github.com/bytemystery-com/colorlabel v1.0.10
-	github.com/bytemystery-com/picbutton v1.0.2
+	github.com/bytemystery-com/picbutton v1.0.3
 	github.com/google/uuid v1.6.0
 	github.com/pkg/sftp v1.13.10
 	golang.org/x/crypto v0.47.0
