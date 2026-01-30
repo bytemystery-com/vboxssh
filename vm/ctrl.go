@@ -83,6 +83,8 @@ func (m *VMachine) GetState() (RunState, error) {
 			return RunState_off, nil
 		case "saved":
 			return RunState_saved, nil
+		case "aborted-saved":
+			return RunState_aborted, nil
 		case "aborted":
 			return RunState_aborted, nil
 		case "paused":
