@@ -346,6 +346,7 @@
     "details.vm_system.mouse.usbtablet": "USB Tablet",
     "details.vm_system.secureboot": "Secure Boot",
     "details.vm_system.secureboot.error": "Set secure boot for VM '%s' failed with: %s",
+    "details.vm_system.tpm.error": "Set TPM for VM '%s' failed with: %s",
     "details.vm_system.utc.error": "Set UTC for VM '%s' failed with: %s",
     "details.vm_usb.addusbfilter.error": "Add USB filter for VM '%s' failed with: %s",
     "details.vm_usb.apply": "Apply",
