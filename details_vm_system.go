@@ -575,6 +575,12 @@ func (sys *SystemTab) Apply() {
 					val, ok := sys.firmwareMapIndexToType[index]
 					if ok {
 						go func() {
+							if val != vm.Firmware_bios {
+								err := v.SetTpm(&s.Client, vm.Tpm_20, VMStatusUpdateCallBack)
+								if err != nil {
+									SetStatusText(fmt.Sprintf(lang.X("details.vm_system.tpm.error", "Set TPM for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)
+								}
+							}
 							err := v.SetFirmware(&s.Client, val, VMStatusUpdateCallBack)
 							if err != nil {
 								SetStatusText(fmt.Sprintf(lang.X("details.vm_system.firmware.error", "Set firmware for VM '%s' failed with: %s"), v.Name, err.Error()), MsgError)

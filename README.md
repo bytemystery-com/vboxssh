@@ -81,7 +81,7 @@ Quit the application, delete the preferences.json file and restart application.
 Now you can set a new master password, but I need to give the data for the servers again.
 
 ## Compatibility
-I have tested with VirtualBox 7.2.4 and with 6.1.50.  
+I have tested with VirtualBox 7.2.4 / 7.2.6 and with 6.1.50.  
 On older VirtualBox some features as secure boot are not available.  
 
 ## Statistics

@@ -57,7 +57,13 @@ func (m *VMachine) setProperty(client *VmSshClient, tag string, value any, callB
 }
 
 func (m *VMachine) setPropertyEx(client *VmSshClient, cmd string, tag string, value any, callBack func(uuid string)) error {
-	return m.setPropertyEx2(client, cmd, []any{tag, value}, callBack)
+	if tag != "" && value != nil {
+		return m.setPropertyEx2(client, cmd, []any{m.UUID, tag, value}, callBack)
+	} else if tag != "" {
+		return m.setPropertyEx2(client, cmd, []any{m.UUID, tag}, callBack)
+	} else {
+		return m.setPropertyEx2(client, cmd, []any{m.UUID}, callBack)
+	}
 }
 
 func (m *VMachine) setPropertyEx2(client *VmSshClient, cmd string, options []any, callBack func(uuid string)) error {

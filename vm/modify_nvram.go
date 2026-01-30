@@ -28,14 +28,20 @@ func (m *VMachine) SetSecureBoot(client *VmSshClient, secureBoot, doEnroll bool,
 	if secureBoot && doEnroll {
 		err := m.setPropertyEx(client, "modifynvram", "enrollmssignatures", nil, callBack)
 		if err != nil {
-			return err
+			// return err
 		}
 		err = m.setPropertyEx(client, "modifynvram", "enrollorclpk", nil, callBack)
 		if err != nil {
-			return err
+			// return err
 		}
 	}
-	return m.setPropertyEx(client, "modifynvram", "secureboot", secureBoot, callBack)
+	s := ""
+	if secureBoot {
+		s = "--enable"
+	} else {
+		s = "--disable"
+	}
+	return m.setPropertyEx(client, "modifynvram", "secureboot", s, callBack)
 }
 
 func (m *VMachine) EnrollDefPlatformKey(client *VmSshClient, callBack func(uuid string)) error {
