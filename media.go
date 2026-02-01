@@ -227,15 +227,15 @@ func (m *MediaHelper) ShowNewHddPropertyDialog(title string, file string, fOk fu
 	}, func(selected string) {
 		switch m.createNewMedia.format.SelectedIndex() {
 		case 0:
-			m.createNewMedia.size.Max = 24000
+			m.createNewMedia.size.Max = 24000000
 		default:
-			m.createNewMedia.size.Max = 2000
+			m.createNewMedia.size.Max = 2000000
 		}
 		m.createNewMedia.size.Refresh()
 	})
 
 	m.createNewMedia.sizeEntry = widget.NewEntry()
-	m.createNewMedia.size = widget.NewSlider(4, 2000)
+	m.createNewMedia.size = widget.NewSlider(4, 2000000)
 	m.createNewMedia.size.Step = 1
 	m.createNewMedia.size.OnChanged = func(val float64) {
 		m.createNewMedia.sizeEntry.SetText(fmt.Sprintf("%.0f", val))
