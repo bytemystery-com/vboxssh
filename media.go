@@ -251,7 +251,7 @@ func (m *MediaHelper) ShowNewHddPropertyDialog(title string, file string, fOk fu
 	m.createNewMedia.fixedSize = widget.NewCheck(lang.X("details.vm_storage.addmedia.create.fixedsize", "Fixed size"), nil)
 
 	unitSize := util.GetDefaultTextSize("XXXXXX")
-	entrySize := util.GetDefaultTextSize("XXXXXXXX")
+	entrySize := util.GetDefaultTextSize("XXXXXXXXXXX")
 	entrySize.Height = m.createNewMedia.sizeEntry.MinSize().Height
 	formWidth := util.GetFormWidth()
 

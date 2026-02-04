@@ -25,6 +25,7 @@
 package server
 
 import (
+	"bytes"
 	"errors"
 	"net"
 	"os"
@@ -34,13 +35,24 @@ import (
 )
 
 type Server struct {
-	Name          string                       `json:"name"`
-	Host          string                       `json:"host"`
-	Port          int                          `json:"port"`
-	User          string                       `json:"user"`
-	Password      string                       `json:"pass"`
-	KeyFile       string                       `json:"keyfile"`
-	KeyFileReader func(string) ([]byte, error) `json:"-"`
+	Name           string                       `json:"name"`
+	Host           string                       `json:"host"`
+	Port           int                          `json:"port"`
+	User           string                       `json:"user"`
+	Password       string                       `json:"pass"`
+	KeyFile        string                       `json:"keyfile"`
+	KeyFileReader  func(string) ([]byte, error) `json:"-"`
+	HostFiles      []string                     `json:"hostfiles"`
+	HostFileReader func(string) ([]byte, error) `json:"-"`
+}
+
+func (server *Server) IsAlive() bool {
+	conn, err := net.Dial("tcp", net.JoinHostPort(server.Host, strconv.Itoa(server.Port)))
+	if err != nil {
+		return false
+	}
+	defer conn.Close()
+	return true
 }
 
 func (server *Server) Reconnect(client **ssh.Client) error {
@@ -96,6 +108,26 @@ func (server *Server) Connect() (*ssh.Client, error) {
 				return nil, err
 			}
 		}
+		var hostKeys []ssh.PublicKey
+		if len(server.HostFiles) > 0 {
+			hostKeys = make([]ssh.PublicKey, 0, len(server.HostFiles))
+			for _, item := range server.HostFiles {
+				var host []byte
+				var err error
+				if server.HostFileReader != nil {
+					host, err = server.HostFileReader(item)
+				} else {
+					host, err = os.ReadFile(item)
+				}
+				if err == nil {
+					hKey, _, _, _, err := ssh.ParseAuthorizedKey(host)
+					if err == nil {
+						hostKeys = append(hostKeys, hKey)
+					}
+				}
+			}
+		}
+
 		auth := []ssh.AuthMethod{}
 		if sig != nil {
 			auth = append(auth, ssh.PublicKeys(sig))
@@ -114,7 +146,16 @@ func (server *Server) Connect() (*ssh.Client, error) {
 			User: server.User,
 			Auth: auth,
 			HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
-				return nil
+				if len(hostKeys) > 0 {
+					for _, item := range hostKeys {
+						if bytes.Equal(key.Marshal(), item.Marshal()) {
+							return nil
+						}
+					}
+					return errors.New("hostkey does not match")
+				} else {
+					return nil
+				}
 			},
 		}
 
