@@ -86,9 +86,29 @@ func NewServerStatTab() *ServerStatInfos {
 
 	srv.tabItem = container.NewTabItem(lang.X("details.vm_info.tab.stat", "Stat"), content)
 
-	srv.updateTicker = time.NewTicker(time.Duration(500) * time.Millisecond)
+	srv.updateTicker = time.NewTicker(time.Duration(200) * time.Millisecond)
+	srv.updateTickerCancel = make(chan bool)
+	go srv.UpdateStat(srv.updateTicker.C, srv.updateTickerCancel)
 
 	return &srv
+}
+
+func (srv *ServerStatInfos) StopTimer() {
+	srv.updateTicker.Stop()
+	srv.updateTickerCancel <- true
+}
+
+func (srv *ServerStatInfos) UpdateStat(trigger <-chan time.Time, cancel <-chan bool) {
+	for {
+		select {
+		case <-trigger:
+			fyne.Do(func() {
+				srv.UpdateDisplay()
+			})
+		case <-cancel:
+			return
+		}
+	}
 }
 
 func (srv *ServerStatInfos) UpdateDisplay() {
@@ -132,7 +152,6 @@ func (srv *ServerStatInfos) DisableAll() {
 }
 
 func (srv *ServerStatInfos) UpdateByStatus() {
-	srv.UpdateDisplay()
 }
 
 func (srv *ServerStatInfos) formatBytesDisplay(v uint64) (string, string) {

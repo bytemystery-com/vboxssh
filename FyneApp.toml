@@ -4,8 +4,8 @@ Website = "https://github.com/bytemystery-com/vboxssh"
 Icon = "assets/icons/icon.png"
 Name = "VBoxSsh"
 ID = "com.bytemystery.vboxssh"
-Version = "0.2.5"
-Build = 96
+Version = "0.2.6"
+Build = 102
 
 [LinuxAndBSD]
 GenericName = "Virtualbox Frontend"

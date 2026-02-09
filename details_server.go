@@ -27,8 +27,8 @@ package main
 import (
 	"fmt"
 	"image/color"
+	"io"
 	"strconv"
-	"time"
 
 	"bytemystery-com/vboxssh/util"
 
@@ -42,7 +42,9 @@ import (
 	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/storage"
+	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+	"golang.org/x/crypto/ssh"
 )
 
 const (
@@ -59,11 +61,12 @@ type ServerSshInfos struct {
 	keyFile       *widget.Entry
 	keyFileBrowse *widget.Button
 	apply         *widget.Button
-
-	updateTicker       *time.Ticker
-	updateTickerCancel chan bool
+	hostKeyList   *widget.List
 
 	tabItem *container.TabItem
+
+	hostFiles             []string
+	selectedHostFileIndex int
 }
 
 var _ DetailsInterface = (*ServerSshInfos)(nil)
@@ -113,20 +116,84 @@ func NewSshServerTab() *ServerSshInfos {
 
 	grid3 := container.New(layout.NewFormLayout(),
 		container.NewGridWrap(fyne.NewSize(labelWidth, 1),
-			widget.NewLabel(lang.X("details.srvssh.keyfile", "Keyfile"))), srv.keyFile)
+			widget.NewLabel(lang.X("details.srvssh.keyfile", "Keyfile"))), srv.keyFile,
+	)
+
+	srv.hostKeyList = widget.NewList(srv.listLength, srv.listCreate, srv.listUpdate)
+	srv.selectedHostFileIndex = -1
+	srv.hostKeyList.OnSelected = func(id widget.ListItemID) {
+		srv.selectedHostFileIndex = id
+	}
+	srv.hostKeyList.OnUnselected = func(id widget.ListItemID) {
+		srv.selectedHostFileIndex = -1
+	}
 
 	i1 := container.NewGridWrap(fyne.NewSize(formWidth, grid1.MinSize().Height), grid1)
 	i2 := container.NewGridWrap(fyne.NewSize(formWidth, grid2.MinSize().Height), grid2)
 	i3 := container.NewGridWrap(fyne.NewSize(2*formWidth, grid3.MinSize().Height), grid3)
 
+	toolItemAdd := widget.NewToolbarAction(theme.ContentAddIcon(), func() {
+		diaHost := dialog.NewFileOpen(func(r fyne.URIReadCloser, err error) {
+			if err != nil {
+				dialog.ShowError(err, Gui.MainWindow)
+				return
+			}
+			if r == nil {
+				return
+			}
+			defer r.Close()
+			data, err := io.ReadAll(r)
+			_, _, _, _, err = ssh.ParseAuthorizedKey(data)
+			if err != nil {
+				dialog.ShowError(err, Gui.MainWindow)
+				return
+			}
+			srv.hostFiles = append(srv.hostFiles, r.URI().String())
+			srv.hostKeyList.Refresh()
+		}, Gui.MainWindow)
+		diaHost.SetView(dialog.ListView)
+		ms := Gui.MainWindow.Canvas().Size()
+		diaHost.Resize(fyne.NewSize(ms.Width*.8, ms.Height*.8))
+		diaHost.Show()
+	})
+	toolItemDel := widget.NewToolbarAction(theme.ContentRemoveIcon(), func() {
+		if srv.selectedHostFileIndex >= 0 {
+			srv.hostFiles = append(srv.hostFiles[:srv.selectedHostFileIndex], srv.hostFiles[srv.selectedHostFileIndex+1:]...)
+			srv.hostKeyList.Refresh()
+		}
+	})
+	toolBar := widget.NewToolbar(toolItemAdd, toolItemDel)
+
 	content := container.NewVBox(util.NewVFiller(0.5), container.NewHBox(i1, i2),
-		container.NewHBox(i3, srv.keyFileBrowse), container.NewHBox(layout.NewSpacer(), srv.apply, util.NewFiller(32, 0)))
+		container.NewHBox(i3, srv.keyFileBrowse))
 
-	srv.tabItem = container.NewTabItem(lang.X("details.vm_info.tab.ssh", "SSH"), content)
+	cl := container.NewBorder(container.NewVBox(content, widget.NewLabel(lang.X("details.srvssh.hostfiles", "Host key files:")), toolBar),
+		container.NewVBox(container.NewHBox(layout.NewSpacer(), srv.apply, util.NewFiller(32, 0)),
+			util.NewFiller(0, 16)), nil, nil, srv.hostKeyList)
 
-	srv.updateTicker = time.NewTicker(time.Duration(500) * time.Millisecond)
+	srv.tabItem = container.NewTabItem(lang.X("details.vm_info.tab.ssh", "SSH"), cl)
 
 	return &srv
+}
+
+func (srv *ServerSshInfos) listLength() int {
+	return len(srv.hostFiles)
+}
+
+func (srv *ServerSshInfos) listCreate() fyne.CanvasObject {
+	text := canvas.NewText("", theme.Color(theme.ColorNameForeground))
+	text.Refresh()
+	return text
+}
+
+func (srv *ServerSshInfos) listUpdate(id widget.ListItemID, o fyne.CanvasObject) {
+	text, ok := o.(*canvas.Text)
+	if !ok {
+		return
+	}
+	text.Text = srv.hostFiles[id]
+	text.Color = theme.Color(theme.ColorNameForeground)
+	text.Refresh()
 }
 
 func (srv *ServerSshInfos) UpdateBySelect() {
@@ -151,6 +218,12 @@ func (srv *ServerSshInfos) UpdateBySelect() {
 	srv.port.SetText(strconv.Itoa(s.Port))
 	srv.pass.SetText(s.Password)
 	srv.keyFile.SetText(s.KeyFile)
+
+	srv.hostFiles = make([]string, 0, len(s.HostFiles))
+	for _, item := range s.HostFiles {
+		srv.hostFiles = append(srv.hostFiles, item)
+	}
+	srv.hostKeyList.Refresh()
 }
 
 func (srv *ServerSshInfos) reset() {
@@ -160,6 +233,8 @@ func (srv *ServerSshInfos) reset() {
 	srv.host.SetText("")
 	srv.port.SetText("")
 	srv.keyFile.SetText("")
+	srv.hostFiles = srv.hostFiles[:0]
+	srv.hostKeyList.Refresh()
 }
 
 func (srv *ServerSshInfos) browseKeyFile() {
@@ -218,6 +293,8 @@ func (srv *ServerSshInfos) add() {
 	}, func(err error) {
 		setAfterConnectStatus(vms, err)
 	})
+	s.HostFiles = make([]string, len(srv.hostFiles))
+	copy(s.HostFiles, srv.hostFiles)
 	SaveServers()
 	srv.SetAddNewMode(false)
 	Gui.Tree.Refresh()
@@ -247,6 +324,8 @@ func (srv *ServerSshInfos) Apply() {
 		s.User = srv.user.Text
 		s.Password = srv.pass.Text
 		s.KeyFile = srv.keyFile.Text
+		s.HostFiles = make([]string, len(srv.hostFiles))
+		copy(s.HostFiles, srv.hostFiles)
 		Gui.Tree.Refresh()
 		SaveServers()
 		SetStatusText(fmt.Sprintf(lang.X("status.server_add_ok", "Server '%s' where added."), s.Name), MsgInfo)

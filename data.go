@@ -121,6 +121,7 @@ func loadServers(masterKey string) ([]vm.VmServer, error) {
 			fmt.Println("!!! Unable to decrypt !!!")
 		}
 		list[i].KeyFileReader = readKeyFile
+		list[i].HostFileReader = readKeyFile
 	}
 	SetStatusText(fmt.Sprintf(lang.X("data.serverlist.loaded", "Server list with %d entries was loaded"), len(list)), MsgInfo)
 
