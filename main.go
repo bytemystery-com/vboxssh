@@ -158,6 +158,7 @@ type GUI struct {
 	VmStorageContainer *fyne.Container
 
 	ServerSshTab      *ServerSshInfos
+	ServerStatTab     *ServerStatInfos
 	ServerVmTab       *VmServerInfos
 	VmInfoTab         *InfoTab
 	VmCpuRamTab       *CpuRamTab
@@ -347,6 +348,9 @@ func main() {
 	Gui.ServerSshTab = NewSshServerTab()
 	Gui.DetailObjs = append(Gui.DetailObjs, Gui.ServerSshTab)
 
+	Gui.ServerStatTab = NewServerStatTab()
+	Gui.DetailObjs = append(Gui.DetailObjs, Gui.ServerStatTab)
+
 	Gui.ServerVmTab = NewVmServerTab()
 	Gui.DetailObjs = append(Gui.DetailObjs, Gui.ServerVmTab)
 
@@ -383,7 +387,7 @@ func main() {
 	Gui.VmSharedFolderTab = NewSharedFolderTab()
 	Gui.DetailObjs = append(Gui.DetailObjs, Gui.VmSharedFolderTab)
 
-	Gui.VmServerTabs = container.NewAppTabs(Gui.ServerSshTab.tabItem, Gui.ServerVmTab.tabItem)
+	Gui.VmServerTabs = container.NewAppTabs(Gui.ServerSshTab.tabItem, Gui.ServerStatTab.tabItem, Gui.ServerVmTab.tabItem)
 
 	Gui.SShServerDetails = widget.NewAccordionItem(lang.X("details.server", "Server"), Gui.VmServerTabs)
 

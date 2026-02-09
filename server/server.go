@@ -30,20 +30,40 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"sync/atomic"
 
 	"golang.org/x/crypto/ssh"
 )
 
+type countingConn struct {
+	net.Conn
+	readBytes  atomic.Uint64
+	writeBytes atomic.Uint64
+}
+
+func (c *countingConn) Read(b []byte) (int, error) {
+	n, err := c.Conn.Read(b)
+	c.readBytes.Add(uint64(n))
+	return n, err
+}
+
+func (c *countingConn) Write(b []byte) (int, error) {
+	n, err := c.Conn.Write(b)
+	c.writeBytes.Add(uint64(n))
+	return n, err
+}
+
 type Server struct {
-	Name           string                       `json:"name"`
-	Host           string                       `json:"host"`
-	Port           int                          `json:"port"`
-	User           string                       `json:"user"`
-	Password       string                       `json:"pass"`
-	KeyFile        string                       `json:"keyfile"`
-	KeyFileReader  func(string) ([]byte, error) `json:"-"`
-	HostFiles      []string                     `json:"hostfiles"`
-	HostFileReader func(string) ([]byte, error) `json:"-"`
+	Name            string                       `json:"name"`
+	Host            string                       `json:"host"`
+	Port            int                          `json:"port"`
+	User            string                       `json:"user"`
+	Password        string                       `json:"pass"`
+	KeyFile         string                       `json:"keyfile"`
+	KeyFileReader   func(string) ([]byte, error) `json:"-"`
+	HostFiles       []string                     `json:"hostfiles"`
+	HostFileReader  func(string) ([]byte, error) `json:"-"`
+	countConnection *countingConn                `json:"-"`
 }
 
 func (server *Server) IsAlive() bool {
@@ -84,7 +104,7 @@ func (server *Server) Disonnect(client **ssh.Client) error {
 
 func (server *Server) Connect() (*ssh.Client, error) {
 	var client *ssh.Client = nil
-	var err error
+	// var err error
 	if len(server.Host) > 0 {
 		var sig ssh.Signer = nil
 		if len(server.KeyFile) > 0 {
@@ -158,8 +178,20 @@ func (server *Server) Connect() (*ssh.Client, error) {
 				}
 			},
 		}
+		rawConn, err := net.Dial("tcp", server.Host+":"+strconv.Itoa(server.Port))
+		if err != nil {
+			return nil, err
+		}
+		server.countConnection = &countingConn{
+			Conn: rawConn,
+		}
+		sshConn, chans, reqs, err := ssh.NewClientConn(server.countConnection, server.Host+":"+strconv.Itoa(server.Port), config)
+		if err != nil {
+			return nil, err
+		}
+		client = ssh.NewClient(sshConn, chans, reqs)
 
-		client, err = ssh.Dial("tcp", server.Host+":"+strconv.Itoa(server.Port), config)
+		// client, err = ssh.Dial("tcp", server.Host+":"+strconv.Itoa(server.Port), config)
 		if err != nil {
 			return nil, err
 		}
@@ -167,4 +199,12 @@ func (server *Server) Connect() (*ssh.Client, error) {
 		client = nil
 	}
 	return client, nil
+}
+
+func (server *Server) GetStatistic() (uint64, uint64) {
+	if server.countConnection != nil {
+		return server.countConnection.readBytes.Load(), server.countConnection.writeBytes.Load()
+	} else {
+		return 0, 0
+	}
 }

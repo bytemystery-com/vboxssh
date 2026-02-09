@@ -28,6 +28,7 @@ import (
 	"fmt"
 	"image/color"
 	"strconv"
+	"time"
 
 	"bytemystery-com/vboxssh/util"
 
@@ -58,6 +59,9 @@ type ServerSshInfos struct {
 	keyFile       *widget.Entry
 	keyFileBrowse *widget.Button
 	apply         *widget.Button
+
+	updateTicker       *time.Ticker
+	updateTickerCancel chan bool
 
 	tabItem *container.TabItem
 }
@@ -119,6 +123,8 @@ func NewSshServerTab() *ServerSshInfos {
 		container.NewHBox(i3, srv.keyFileBrowse), container.NewHBox(layout.NewSpacer(), srv.apply, util.NewFiller(32, 0)))
 
 	srv.tabItem = container.NewTabItem(lang.X("details.vm_info.tab.ssh", "SSH"), content)
+
+	srv.updateTicker = time.NewTicker(time.Duration(500) * time.Millisecond)
 
 	return &srv
 }
