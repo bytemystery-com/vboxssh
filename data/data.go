@@ -158,7 +158,8 @@ func (v *VmData) GetServer(uuid string, lock bool) *vm.VmServer {
 		v.Lock.RLock()
 		defer v.Lock.RUnlock()
 	}
-	return v.ServerList.GetByKey(uuid)
+	x, _ := v.ServerList.GetByKey(uuid)
+	return x
 }
 
 // Called from tree (update)
@@ -171,7 +172,8 @@ func (v *VmData) GetVm(serverUuid, vmUuid string, lock bool) *vm.VMachine {
 	if m == nil {
 		return nil
 	}
-	return m.GetByKey(vmUuid)
+	x, _ := m.GetByKey(vmUuid)
+	return x
 }
 
 // Called from tree

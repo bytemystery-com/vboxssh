@@ -46,6 +46,10 @@ done
 shift $(($OPTIND - 1))
 
 if [[ ${ONLYWIN} -eq 0 && ${ONLYAND} -eq 0 && ${ONLYLINUX} -eq 0 ]] ; then
+    go fmt ./...    
+    go vet ./... 
+    go get -u ./... # ???   
+    go mod tidy
     go clean -cache -modcache
     ONLYWIN=1
     ONLYLINUX=1
@@ -54,6 +58,12 @@ fi
 
 ts=$(date -u +'%Y-%m-%d - %H:%M:%S')
 fyne translate assets/lang/xx.json
+# LANGUAGES="en de"
+LANGUAGES=""
+for la in ${LANGUAGES} ; do
+    jq -s '.[0] * .[1]' assets/lang/xx.json assets/lang/${la}.json > assets/lang/${la}_x.json
+    mv assets/lang/${la}_x.json assets/lang/${la}.json
+done
 
 if [[ ${ONLYWIN} -eq 1 ]] ; then
     export CC_WIN=x86_64-w64-mingw32-gcc

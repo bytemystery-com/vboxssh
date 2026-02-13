@@ -93,8 +93,9 @@ func (om *OMap[K, V]) Clear() {
 	om.tmpl = nil
 }
 
-func (om *OMap[K, V]) GetByKey(key K) V {
-	return om.m[key]
+func (om *OMap[K, V]) GetByKey(key K) (V, bool) {
+	v, ok := om.m[key]
+	return v, ok
 }
 
 func (om *OMap[K, V]) GetByIndex(index int) V {
@@ -138,3 +139,25 @@ func (om *OMap[K, V]) Find(value V) []int {
 	return list
 }
 */
+
+func (om *OMap[K, V]) IterKey() <-chan K {
+	ch := make(chan K)
+	go func() {
+		for _, k := range om.l {
+			ch <- k
+		}
+		close(ch)
+	}()
+	return ch
+}
+
+func (om *OMap[K, V]) IterValue() <-chan V {
+	ch := make(chan V)
+	go func() {
+		for _, k := range om.l {
+			ch <- om.m[k]
+		}
+		close(ch)
+	}()
+	return ch
+}
