@@ -372,9 +372,15 @@ func (s *SftpFileBrowser) listUpdateItem(id widget.ListItemID, o fyne.CanvasObje
 	if f.IsDir() {
 		icon.Resource = theme.FolderIcon()
 		text.Color = theme.Color(theme.ColorNameForeground)
+		text.TextStyle = fyne.TextStyle{
+			Bold: true,
+		}
 	} else {
 		icon.Resource = theme.FileIcon()
 		text.Color = theme.Color(theme.ColorNamePrimary)
+		text.TextStyle = fyne.TextStyle{
+			Bold: false,
+		}
 	}
 	text.Refresh()
 	icon.Refresh()

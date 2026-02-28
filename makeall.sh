@@ -25,15 +25,42 @@
 # CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" .
 # CGO_ENABLED=1 GOOS=android GOARCH=arm64 CC=$CC CXX=$CXX fyne package --os android --release --archs arm64,armv7 --metadata buildts="${ts}"
 
+# sudo apt-get install libgl1-mesa-dev xorg-dev libxkbcommon-dev mingw-w64 osslsigncode cloc jq
+
+# Zertifikat erzeugen
+# openssl genrsa -out bytemystery_key.pem 4096
+# openssl req -new -x509 -key bytemystery_key.pem -out bytemystery_cert.pem -days 10000 -subj "/C=DE/ST=Bayern/L=Munich/CN=bytemystery.com"
+# openssl pkcs12 -export -out bytemystery.pfx -inkey bytemystery_key.pem -in bytemystery_cert.pem
+
+PROGRAM_NAME='VBoxSsh'
+PROGRAM_NAME_LOWER='vboxssh'
+
+export PATH=${PATH}:~/go/bin
+
+X=$(which osslsigncode)
+if [[ ${X} == "" ]] ; then
+    echo -e "osslsigncode must be installed\nsudo apt install osslsigncode"
+    exit 1
+fi
+
+X=$(which jq)
+if [[ ${X} == "" ]] ; then
+    echo -e "jq must be installed\nsudo apt install jq"
+    exit 1
+fi
+
 ONLYWIN=0
-ONLYAND=0
 ONLYLINUX=0
-while getopts law?h var
+ONLYAND=0
+CLEAN=0
+while getopts claw?h var
 do
   case ${var} in
     l ) ONLYLINUX=1
 	;;
     w ) ONLYWIN=1
+	;;
+    c ) CLEAN=1
 	;;
     a ) ONLYAND=1
 	;;
@@ -50,62 +77,116 @@ if [[ ${ONLYWIN} -eq 0 && ${ONLYAND} -eq 0 && ${ONLYLINUX} -eq 0 ]] ; then
     go vet ./... 
     go get -u ./... # ???   
     go mod tidy
-    go clean -cache -modcache
+    if [[ ${CLEAN} ]] ; then
+        go clean -cache -modcache
+    fi
     ONLYWIN=1
     ONLYLINUX=1
     ONLYAND=1
 fi
 
+go install fyne.io/tools/cmd/fyne@latest
+if [[ ${ONLYWIN} -eq 1 ]] ; then
+    go get github.com/tc-hib/go-winres@latest
+    go install github.com/tc-hib/go-winres@latest
+fi
+
 ts=$(date -u +'%Y-%m-%d - %H:%M:%S')
+rm assets/lang/xx.json
 fyne translate assets/lang/xx.json
-# LANGUAGES="en de"
-LANGUAGES=""
+cp assets/lang/xx.json assets/lang/en.json
+LANGUAGES="de"
 for la in ${LANGUAGES} ; do
     jq -s '.[0] * .[1]' assets/lang/xx.json assets/lang/${la}.json > assets/lang/${la}_x.json
     mv assets/lang/${la}_x.json assets/lang/${la}.json
 done
 
-if [[ ${ONLYWIN} -eq 1 ]] ; then
-    export CC_WIN=x86_64-w64-mingw32-gcc
-    export CXX_WIN=x86_64-w64-mingw32-g++
-    echo "Build windows ..."
-    CGO_ENABLED=1 CXX=${CXX_WIN} CC=${CC_WIN} GOOS=windows GOARCH=amd64 fyne package --release --metadata buildts="${ts}"
-    mkdir -p dist/windows
-    mv VBoxSsh.exe dist/windows
-fi
-
-if [[ ${ONLYLINUX} -eq 1 ]] ; then
-    echo "Build linux ..."
-    CGO_ENABLED=1 GOOS=linux GOARCH=amd64 fyne package --release --metadata buildts="${ts}"
-    CGO_ENABLED=1 GOOS=linux GOARCH=amd64 fyne build --release --metadata buildts="${ts}"
-    mkdir -p dist/linux
-    mv vboxssh dist/linux
-    mv VBoxSsh.tar.xz dist/linux
-fi
-
-if [[ ${ONLYAND} -eq 1 ]] ; then
-    # Android stuff
-    echo "Build android ..."
-    ANDROID_KEY=~/Dropbox/private/android_key/android_key.txt
-    export ANDROID_HOME=${HOME}/Android
-    export ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/25.2.9519653
-    OLD_PATH=${PATH}
-    OLD_TOOLCHAIN=${TOOLCHAIN}
-    export PATH=$PATH:${ANDROID_HOME}/platform-tools:${ANDROID_HOME}/cmdline-tools/latest/bin
-    export TOOLCHAIN=${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64
-    export CC_AND=${TOOLCHAIN}/bin/aarch64-linux-android21-clang
-    export CXX_AND=${TOOLCHAIN}/bin/aarch64-linux-android21-clang++
-    CGO_ENABLED=1 GOOS=android GOARCH=arm64 CC=${CC_AND} CXX=${CXX_AND} fyne package --os android --release --metadata buildts="${ts}"
-    if [[ -f "${ANDROID_KEY}" ]] ; then
-        dir=$(dirname "${ANDROID_KEY}")
-        ANDROID_KEY_FILE="${dir}"/$(tail -n+4 "${ANDROID_KEY}" | head -n1)
-        ANDROID_KEYSTORE_PASS=$(tail -n+5 "${ANDROID_KEY}" | head -n1)
-        ANDROID_KEY_PASS=$(tail -n+6 "${ANDROID_KEY}" | head -n1)
-        ${ANDROID_HOME}/build-tools/33.0.2/apksigner sign --ks "${ANDROID_KEY_FILE}" -ks-pass "pass:${ANDROID_KEYSTORE_PASS}" --key-pass "pass:${ANDROID_KEY_PASS}" VBoxSsh.apk
-        rm VBoxSsh.apk.idsig
+cloc .
+TAGS="NOTAG"
+for tag in ${TAGS} ; do
+    echo "Build tag: ${tag} ..."
+    if [[ ${tag} == "NOTAG" ]] ; then
+        suffix=""
+    else 
+        suffix="_${tag}"
     fi
-    PATH=${OLD_PATH}
-    TOOLCHAIN=${OLD_TOOLCHAIN}
-    mkdir -p dist/android
-    mv VBoxSsh.apk dist/android
-fi
+    if [[ ${ONLYWIN} -eq 1 ]] ; then
+        export CC_WIN=x86_64-w64-mingw32-gcc
+        export CXX_WIN=x86_64-w64-mingw32-g++
+        echo "Build windows ..."
+        CGO_ENABLED=1 CXX=${CXX_WIN} CC=${CC_WIN} GOOS=windows GOARCH=amd64 fyne package --release --metadata buildts="${ts}" --tags ${tag}
+        # GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" .
+        VERSION=$(sed -n 's/^Version *= *"\(.*\)"/\1/p' FyneApp.toml)
+        BUILD=$(sed -n 's/^Build *= *\([0-9]\+\)/\1/p' FyneApp.toml)
+        VER=${VERSION}"."${BUILD}
+        sed "s/<VERSION>/${VER}/g" winres.json > winres_act.json
+        # go-winres make --in winres_act.json
+        go-winres patch --in winres_act.json --no-backup --delete "${PROGRAM_NAME}".exe
+        rm winres_act.json
+        WINDOWS_KEY=~/Dropbox/private/windows_key/windows_key.txt
+        if [[ -f "${WINDOWS_KEY}" ]] ; then
+            dir=$(dirname "${WINDOWS_KEY}")
+            WIN_PFX="${dir}"/$(tail -n+1 "${WINDOWS_KEY}" | head -n1)
+            WIN_PASS=$(tail -n+2 "${WINDOWS_KEY}" | head -n1)
+            osslsigncode sign -pkcs12 "${WIN_PFX}" -pass "${WIN_PASS}" -n ""${PROGRAM_NAME}"" -ts http://timestamp.digicert.com -in "${PROGRAM_NAME}".exe -out "${PROGRAM_NAME}"_sig.exe
+            rm "${PROGRAM_NAME}".exe
+            mv "${PROGRAM_NAME}"_sig.exe "${PROGRAM_NAME}"${suffix}.exe
+        fi
+        mkdir -p dist/windows
+        mv "${PROGRAM_NAME}"${suffix}.exe dist/windows
+    fi
+
+    if [[ ${ONLYLINUX} -eq 1 ]] ; then
+        echo "Build linux ..."
+        CGO_ENABLED=1 GOOS=linux GOARCH=amd64 fyne package --release --executable "${PROGRAM_NAME}" --metadata buildts="${ts}" --tags ${tag}
+        CGO_ENABLED=1 GOOS=linux GOARCH=amd64 fyne build --release --output "${PROGRAM_NAME}" --metadata buildts="${ts}" --tags ${tag}
+        # go build -ldflags="-s -w" .
+        mkdir -p dist/linux
+        sudo mv -f "${PROGRAM_NAME}" dist/linux/"${PROGRAM_NAME}"${suffix}
+        mv "${PROGRAM_NAME}".tar.xz dist/linux/"${PROGRAM_NAME}"${suffix}.tar.xz
+    fi
+
+    if [[ ${ONLYAND} -eq 1 ]] ; then
+        # Android stuff
+        echo "Build android ..."
+        ANDROID_KEY=~/Dropbox/private/android_key/android_key.txt
+        HAS_ANDROID_KEY=0
+        if [[ -f "${ANDROID_KEY}" ]] ; then
+            dir=$(dirname "${ANDROID_KEY}")
+            ANDROID_KEY_FILE="${dir}"/$(tail -n+4 "${ANDROID_KEY}" | head -n1)
+            ANDROID_KEYSTORE_PASS=$(tail -n+5 "${ANDROID_KEY}" | head -n1)
+            ANDROID_KEY_PASS=$(tail -n+6 "${ANDROID_KEY}" | head -n1)
+            ANDROID_KEY_ALIAS=$(tail -n+7 "${ANDROID_KEY}" | head -n1)
+            HAS_ANDROID_KEY=1
+        fi
+        mkdir -p dist/android
+        export ANDROID_HOME=${HOME}/Android
+        export ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/latest
+        OLD_PATH=${PATH}
+        OLD_TOOLCHAIN=${TOOLCHAIN}
+        export PATH=$PATH:$ANDROID_HOME/platform-tools:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/build-tools/latest
+        export TOOLCHAIN=${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64
+        export CC_AND=${TOOLCHAIN}/bin/aarch64-linux-android21-clang
+        export CXX_AND=${TOOLCHAIN}/bin/aarch64-linux-android21-clang++
+        CGO_ENABLED=1 GOOS=android CC=${CC_AND} CXX=${CXX_AND} fyne package -os android --release --metadata buildts="${ts}" --tags ${tag}
+        if [[ ${HAS_ANDROID_KEY} -eq 1 ]] ; then
+            apksigner sign --ks "${ANDROID_KEY_FILE}" --ks-key-alias "${ANDROID_KEY_ALIAS}" --ks-pass "pass:${ANDROID_KEYSTORE_PASS}" --key-pass "pass:${ANDROID_KEY_PASS}" "${PROGRAM_NAME}".apk
+            rm "${PROGRAM_NAME}".apk.idsig
+            mv "${PROGRAM_NAME}".apk dist/android/"${PROGRAM_NAME}"${suffix}.apk
+        fi
+        CGO_ENABLED=1 GOOS=android CC=${CC_AND} CXX=${CXX_AND} fyne package -target android/arm64 --release --metadata buildts="${ts}" --tags ${tag}
+        if [[ ${HAS_ANDROID_KEY} -eq 1 ]] ; then
+            apksigner sign --ks "${ANDROID_KEY_FILE}" --ks-key-alias "${ANDROID_KEY_ALIAS}" --ks-pass "pass:${ANDROID_KEYSTORE_PASS}" --key-pass "pass:${ANDROID_KEY_PASS}" "${PROGRAM_NAME}".apk
+            rm "${PROGRAM_NAME}".apk.idsig
+            mv "${PROGRAM_NAME}".apk dist/android/"${PROGRAM_NAME}"${suffix}_64.apk
+        fi
+        if [[ ${HAS_ANDROID_KEY} -eq 1 ]] ; then
+            CGO_ENABLED=1 GOOS=android CC=${CC_AND} CXX=${CXX_AND} fyne release --target android/arm --keystore "${ANDROID_KEY_FILE}" --keystore-pass "${ANDROID_KEYSTORE_PASS}" --key-pass "${ANDROID_KEY_PASS}" --key-name "${ANDROID_KEY_ALIAS}" --metadata buildts="${ts}" --tags ${tag}
+            mv "${PROGRAM_NAME}".aab dist/android/"${PROGRAM_NAME}"${suffix}_32.aab
+            CGO_ENABLED=1 GOOS=android CC=${CC_AND} CXX=${CXX_AND} fyne release --target android/arm64 --keystore "${ANDROID_KEY_FILE}" --keystore-pass "${ANDROID_KEYSTORE_PASS}" --key-pass "${ANDROID_KEY_PASS}" --key-name "${ANDROID_KEY_ALIAS}" --metadata buildts="${ts}" --tags ${tag}
+            mv "${PROGRAM_NAME}".aab dist/android/"${PROGRAM_NAME}"${suffix}_64.aab
+        fi
+        PATH=${OLD_PATH}
+        TOOLCHAIN=${OLD_TOOLCHAIN}
+    fi
+done
