@@ -25,7 +25,10 @@
 package util
 
 import (
+	"encoding/json"
+	"fmt"
 	"image/color"
+	"net/http"
 	"strings"
 
 	"bytemystery-com/vboxssh/vm"
@@ -233,4 +236,28 @@ func GetServerAddressAsString(s *ssh.Client) string {
 		server = lang.X("filebrowser.server.local", "local")
 	}
 	return server
+}
+
+func CheckForUpdate() (string, string, error) {
+	url := "https://api.github.com/repos/bytemystery-com/vboxssh/releases/latest"
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return "", "", fmt.Errorf("HTTP %d", resp.StatusCode)
+	}
+
+	type GitHubRelease struct {
+		TagName string `json:"tag_name"`
+		HTMLURL string `json:"html_url"`
+	}
+	var release GitHubRelease
+	err = json.NewDecoder(resp.Body).Decode(&release)
+	if err != nil {
+		return "", "", err
+	}
+	return release.HTMLURL, release.TagName, nil
 }

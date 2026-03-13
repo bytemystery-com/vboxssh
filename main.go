@@ -27,13 +27,16 @@ package main
 import (
 	"embed"
 	"errors"
+	"fmt"
 	"image/color"
 	"net/http"
+	"net/url"
 	"time"
 
 	_ "net/http/pprof"
 
 	"bytemystery-com/vboxssh/crypt"
+	"bytemystery-com/vboxssh/util"
 
 	"bytemystery-com/vboxssh/data"
 
@@ -216,6 +219,7 @@ func main() {
 
 	hMenu := fyne.NewMenu(lang.X("menu.help", "Help"),
 		fyne.NewMenuItem(lang.X("menu.help.help", "Help"), func() { doHelp() }),
+		fyne.NewMenuItem(lang.X("menu.help.checkupdate", "Check for Update"), func() { CheckForUpdate(false) }),
 		fyne.NewMenuItemSeparator(),
 		fyne.NewMenuItem(lang.X("menu.help.info", "Info"), showInfoDialog),
 	)
@@ -467,6 +471,9 @@ func main() {
 				Gui.Settings.FirstStart = false
 				Gui.Settings.Store()
 			}
+			if Gui.Settings.AutoUpdateCheck {
+				CheckForUpdate(true)
+			}
 		}
 	}, func() {
 		CloseApp()
@@ -522,6 +529,70 @@ func fixScroll(scroll *container.Scroll) {
 					}
 				}
 			})
+		}
+	}()
+}
+
+func CheckForUpdate(notify bool) {
+	if notify {
+		now := time.Now().Unix()
+		if now-Gui.Settings.LastUpdatecheck < int64(Gui.Settings.UpdateCheckInterval)*3600 {
+			return
+		}
+	}
+	go func() {
+		m := Gui.App.Metadata()
+		type Version struct {
+			maj   int
+			min   int
+			patch int
+		}
+		thisVersion := Version{}
+		gitVersion := Version{}
+		web, newVer, err := util.CheckForUpdate()
+		if err != nil {
+			return
+		}
+		n, err := fmt.Sscanf(m.Version, "%d.%d.%d", &thisVersion.maj, &thisVersion.min, &thisVersion.patch)
+		if n != 3 || err != nil {
+			return
+		}
+		n, err = fmt.Sscanf(newVer, "v%d.%d.%d", &gitVersion.maj, &gitVersion.min, &gitVersion.patch)
+		if n != 3 || err != nil {
+			return
+		}
+		if thisVersion.maj < gitVersion.maj || (thisVersion.maj == gitVersion.maj && thisVersion.min < gitVersion.min) ||
+			(thisVersion.maj == gitVersion.maj && thisVersion.min == gitVersion.min && thisVersion.patch < gitVersion.patch) {
+			link, err := url.Parse(web)
+			if err != nil {
+				return
+			}
+			fyne.Do(func() {
+				if notify {
+					SendNotification(lang.X("update.notify.title", "New version"), fmt.Sprintf(lang.X("update.notify.msg", "New version %s is available"), newVer))
+					Gui.Settings.LastUpdatecheck = time.Now().Unix()
+					Gui.Settings.Store()
+				} else {
+					msg := widget.NewHyperlinkWithStyle(fmt.Sprintf(lang.X("update.msg", "A new version %s is available !"), newVer),
+						link, fyne.TextAlignCenter, fyne.TextStyle{
+							Bold: true,
+						})
+					var dia *dialog.CustomDialog
+					ok := widget.NewButton(lang.X("ok", "Ok"), func() {
+						dia.Hide()
+					})
+					dia = dialog.NewCustomWithoutButtons(lang.X("update.title", "Update"),
+						container.NewVBox(msg, util.NewVFiller(2), ok), Gui.MainWindow)
+					dia.Show()
+					dia.Resize(fyne.NewSize(Gui.MainWindow.Canvas().Size().Width, dia.MinSize().Height))
+				}
+			})
+		} else {
+			if !notify {
+				fyne.Do(func() {
+					dialog.ShowInformation(lang.X("update.title", "Update"), lang.X("update.nonew", "You are alread running the latest version."), Gui.MainWindow)
+				})
+			}
 		}
 	}()
 }

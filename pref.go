@@ -25,39 +25,47 @@
 package main
 
 const (
-	PREF_TREE_UPDATE_TIME_KEY   = "tree.update_time"
-	PREF_TREE_UPDATE_TIME_VALUE = 20000
-
-	PREF_TREE_UPDATE_DELAY_KEY   = "tree.update_delay"
-	PREF_TREE_UPDATE_DELAY_VALUE = 1000
-
-	PREF_TASKS_MAX_ENTRIES_KEY   = "tasks.max_entries"
-	PREF_TASKS_MAX_ENTRIES_VALUE = 15
-
-	PREF_TASKS_FIRST_START_KEY = "firststart"
-
-	PREF_SERVERS_KEY          = "serverlist"
-	PREF_MASTERKEY_TEST_KEY   = "mastertest"
-	PREF_MASTERKEY_TEST_VALUE = "Reiner"
+	PREF_TREE_UPDATE_TIME_KEY        = "tree.update_time"
+	PREF_TREE_UPDATE_TIME_VALUE      = 20000
+	PREF_TREE_UPDATE_DELAY_KEY       = "tree.update_delay"
+	PREF_TREE_UPDATE_DELAY_VALUE     = 1000
+	PREF_TASKS_MAX_ENTRIES_KEY       = "tasks.max_entries"
+	PREF_TASKS_MAX_ENTRIES_VALUE     = 15
+	PREF_TASKS_FIRST_START_KEY       = "firststart"
+	PREF_SERVERS_KEY                 = "serverlist"
+	PREF_MASTERKEY_TEST_KEY          = "mastertest"
+	PREF_MASTERKEY_TEST_VALUE        = "Reiner"
+	PREF_UPDATE_LAST_CHECK_KEY       = "lastupdatecheck"
+	PREF_UPDATE_LAST_CHECK_VALUE     = 0
+	PREF_UPDATE_CHECK_INTERVAL_KEY   = "updatecheckinterval"
+	PREF_UPDATE_CHECK_INTERVAL_VALUE = 48
+	PREF_UPDATE_CHECK_AUTO_KEY       = "autoupdatecheck"
+	PREF_UPDATE_CHECK_AUTO_VALUE     = true
 )
 
 type Preferences struct {
-	TreeUpdateTime  int // msec
-	TreeDelayTime   int // msec
-	TasksMaxEntries int
-	ServerList      string // json String
-	MasterKeyTest   string
-	FirstStart      bool
+	TreeUpdateTime      int // msec
+	TreeDelayTime       int // msec
+	TasksMaxEntries     int
+	ServerList          string // json String
+	MasterKeyTest       string
+	FirstStart          bool
+	LastUpdatecheck     int64
+	UpdateCheckInterval int
+	AutoUpdateCheck     bool
 }
 
 func NewPreferences() *Preferences {
 	p := &Preferences{
-		TreeUpdateTime:  Gui.App.Preferences().IntWithFallback(PREF_TREE_UPDATE_TIME_KEY, PREF_TREE_UPDATE_TIME_VALUE),
-		TreeDelayTime:   Gui.App.Preferences().IntWithFallback(PREF_TREE_UPDATE_DELAY_KEY, PREF_TREE_UPDATE_DELAY_VALUE),
-		TasksMaxEntries: Gui.App.Preferences().IntWithFallback(PREF_TASKS_MAX_ENTRIES_KEY, PREF_TASKS_MAX_ENTRIES_VALUE),
-		ServerList:      Gui.App.Preferences().StringWithFallback(PREF_SERVERS_KEY, ""),
-		MasterKeyTest:   Gui.App.Preferences().StringWithFallback(PREF_MASTERKEY_TEST_KEY, PREF_MASTERKEY_TEST_VALUE),
-		FirstStart:      Gui.App.Preferences().BoolWithFallback(PREF_TASKS_FIRST_START_KEY, true),
+		TreeUpdateTime:      Gui.App.Preferences().IntWithFallback(PREF_TREE_UPDATE_TIME_KEY, PREF_TREE_UPDATE_TIME_VALUE),
+		TreeDelayTime:       Gui.App.Preferences().IntWithFallback(PREF_TREE_UPDATE_DELAY_KEY, PREF_TREE_UPDATE_DELAY_VALUE),
+		TasksMaxEntries:     Gui.App.Preferences().IntWithFallback(PREF_TASKS_MAX_ENTRIES_KEY, PREF_TASKS_MAX_ENTRIES_VALUE),
+		ServerList:          Gui.App.Preferences().StringWithFallback(PREF_SERVERS_KEY, ""),
+		MasterKeyTest:       Gui.App.Preferences().StringWithFallback(PREF_MASTERKEY_TEST_KEY, PREF_MASTERKEY_TEST_VALUE),
+		FirstStart:          Gui.App.Preferences().BoolWithFallback(PREF_TASKS_FIRST_START_KEY, true),
+		LastUpdatecheck:     100 * int64(Gui.App.Preferences().IntWithFallback(PREF_UPDATE_LAST_CHECK_KEY, PREF_UPDATE_LAST_CHECK_VALUE)),
+		UpdateCheckInterval: Gui.App.Preferences().IntWithFallback(PREF_UPDATE_CHECK_INTERVAL_KEY, PREF_UPDATE_CHECK_INTERVAL_VALUE),
+		AutoUpdateCheck:     Gui.App.Preferences().BoolWithFallback(PREF_UPDATE_CHECK_AUTO_KEY, PREF_UPDATE_CHECK_AUTO_VALUE),
 	}
 	return p
 }
@@ -70,4 +78,7 @@ func (p *Preferences) Store() {
 	pref.SetString(PREF_SERVERS_KEY, p.ServerList)
 	pref.SetString(PREF_MASTERKEY_TEST_KEY, p.MasterKeyTest)
 	pref.SetBool(PREF_TASKS_FIRST_START_KEY, p.FirstStart)
+	pref.SetInt(PREF_UPDATE_LAST_CHECK_KEY, int(p.LastUpdatecheck/100))
+	pref.SetInt(PREF_UPDATE_CHECK_INTERVAL_KEY, p.UpdateCheckInterval)
+	pref.SetBool(PREF_UPDATE_CHECK_AUTO_KEY, p.AutoUpdateCheck)
 }
