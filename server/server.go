@@ -31,6 +31,7 @@ import (
 	"os"
 	"strconv"
 	"sync/atomic"
+	"time"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -39,6 +40,8 @@ type countingConn struct {
 	net.Conn
 	readBytes  atomic.Uint64
 	writeBytes atomic.Uint64
+	reConnects atomic.Uint64
+	startTime  time.Time
 }
 
 func (c *countingConn) Read(b []byte) (int, error) {
@@ -53,17 +56,24 @@ func (c *countingConn) Write(b []byte) (int, error) {
 	return n, err
 }
 
+func (c *countingConn) Reconnect() {
+	c.reConnects.Add(1)
+	c.startTime = time.Now()
+}
+
 type Server struct {
-	Name            string                       `json:"name"`
-	Host            string                       `json:"host"`
-	Port            int                          `json:"port"`
-	User            string                       `json:"user"`
-	Password        string                       `json:"pass"`
-	KeyFile         string                       `json:"keyfile"`
-	KeyFileReader   func(string) ([]byte, error) `json:"-"`
-	HostFiles       []string                     `json:"hostfiles"`
-	HostFileReader  func(string) ([]byte, error) `json:"-"`
-	countConnection *countingConn                `json:"-"`
+	Name             string                       `json:"name"`
+	Host             string                       `json:"host"`
+	Port             int                          `json:"port"`
+	User             string                       `json:"user"`
+	Password         string                       `json:"pass"`
+	KeyFile          string                       `json:"keyfile"`
+	KeyFileReader    func(string) ([]byte, error) `json:"-"`
+	KeyFileContent   []byte                       `json:"keyfilecontent"`
+	HostFiles        []string                     `json:"hostfiles"`
+	HostFilesContent [][]byte                     `json:"hostfilescontent"`
+	HostFileReader   func(string) ([]byte, error) `json:"-"`
+	countConnection  *countingConn                `json:"-"`
 }
 
 func (server *Server) IsAlive() bool {
@@ -87,6 +97,7 @@ func (server *Server) Reconnect(client **ssh.Client) error {
 		return err
 	}
 	*client = c
+	server.countConnection.Reconnect()
 	return nil
 }
 
@@ -107,13 +118,17 @@ func (server *Server) Connect() (*ssh.Client, error) {
 	// var err error
 	if len(server.Host) > 0 {
 		var sig ssh.Signer = nil
-		if len(server.KeyFile) > 0 {
+		if len(server.KeyFile) > 0 || len(server.KeyFileContent) > 0 {
 			var key []byte
 			var err error
-			if server.KeyFileReader != nil {
-				key, err = server.KeyFileReader(server.KeyFile)
+			if len(server.KeyFileContent) > 0 {
+				key = server.KeyFileContent
 			} else {
-				key, err = os.ReadFile(server.KeyFile)
+				if server.KeyFileReader != nil {
+					key, err = server.KeyFileReader(server.KeyFile)
+				} else {
+					key, err = os.ReadFile(server.KeyFile)
+				}
 			}
 			if err != nil {
 				return nil, err
@@ -129,20 +144,29 @@ func (server *Server) Connect() (*ssh.Client, error) {
 			}
 		}
 		var hostKeys []ssh.PublicKey
-		if len(server.HostFiles) > 0 {
-			hostKeys = make([]ssh.PublicKey, 0, len(server.HostFiles))
-			for _, item := range server.HostFiles {
-				var host []byte
-				var err error
-				if server.HostFileReader != nil {
-					host, err = server.HostFileReader(item)
-				} else {
-					host, err = os.ReadFile(item)
-				}
-				if err == nil {
+		if len(server.HostFiles) > 0 || len(server.HostFilesContent) > 0 {
+			if len(server.HostFilesContent) > 0 {
+				for _, host := range server.HostFilesContent {
 					hKey, _, _, _, err := ssh.ParseAuthorizedKey(host)
 					if err == nil {
 						hostKeys = append(hostKeys, hKey)
+					}
+				}
+			} else {
+				hostKeys = make([]ssh.PublicKey, 0, len(server.HostFiles))
+				for _, item := range server.HostFiles {
+					var host []byte
+					var err error
+					if server.HostFileReader != nil {
+						host, err = server.HostFileReader(item)
+					} else {
+						host, err = os.ReadFile(item)
+					}
+					if err == nil {
+						hKey, _, _, _, err := ssh.ParseAuthorizedKey(host)
+						if err == nil {
+							hostKeys = append(hostKeys, hKey)
+						}
 					}
 				}
 			}
@@ -165,6 +189,11 @@ func (server *Server) Connect() (*ssh.Client, error) {
 		config := &ssh.ClientConfig{
 			User: server.User,
 			Auth: auth,
+			/*
+				HostKeyAlgorithms: []string{
+					ssh.KeyAlgoED25519,
+				},
+			*/
 			HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
 				if len(hostKeys) > 0 {
 					for _, item := range hostKeys {
@@ -182,8 +211,12 @@ func (server *Server) Connect() (*ssh.Client, error) {
 		if err != nil {
 			return nil, err
 		}
-		server.countConnection = &countingConn{
-			Conn: rawConn,
+		if server.countConnection == nil {
+			server.countConnection = &countingConn{
+				Conn: rawConn,
+			}
+		} else {
+			server.countConnection.Conn = rawConn
 		}
 		sshConn, chans, reqs, err := ssh.NewClientConn(server.countConnection, server.Host+":"+strconv.Itoa(server.Port), config)
 		if err != nil {
@@ -191,20 +224,20 @@ func (server *Server) Connect() (*ssh.Client, error) {
 		}
 		client = ssh.NewClient(sshConn, chans, reqs)
 
-		// client, err = ssh.Dial("tcp", server.Host+":"+strconv.Itoa(server.Port), config)
 		if err != nil {
 			return nil, err
 		}
 	} else {
 		client = nil
 	}
+	server.countConnection.startTime = time.Now()
 	return client, nil
 }
 
-func (server *Server) GetStatistic() (uint64, uint64) {
+func (server *Server) GetStatistic() (uint64, uint64, uint64, time.Time) {
 	if server.countConnection != nil {
-		return server.countConnection.readBytes.Load(), server.countConnection.writeBytes.Load()
+		return server.countConnection.readBytes.Load(), server.countConnection.writeBytes.Load(), server.countConnection.reConnects.Load(), server.countConnection.startTime
 	} else {
-		return 0, 0
+		return 0, 0, 0, time.Time{}
 	}
 }

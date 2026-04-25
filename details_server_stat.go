@@ -126,7 +126,7 @@ func (srv *ServerStatInfos) UpdateDisplay() {
 		srv.unitRead.SetText(t)
 		srv.unitTotal.SetText(t)
 	} else {
-		r, w := s.GetStatistic()
+		r, w, _, _ := s.GetStatistic()
 		val, unit := srv.formatBytesDisplay(r)
 		srv.read.SetText(val)
 		srv.unitRead.SetText(unit)
