@@ -147,6 +147,7 @@
     "details.vm_display.vga.minimal": "VBoxSVGA",
     "details.vm_display.vga.none": "None",
     "details.vm_display.vga.vboxvga": "VBoxVGA",
+    "details.vm_general": "VM - General",
     "details.vm_info": "Apply",
     "details.vm_info.cfglocation": "Location",
     "details.vm_info.description_placeholder": "Description of VM",

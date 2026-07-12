@@ -399,7 +399,7 @@ func main() {
 		Gui.VmInfoTab.tabItem, Gui.VmSystemTab.tabItem, Gui.VmCpuRamTab.tabItem,
 		Gui.VmDisplayTab.tabItem, Gui.VmRdpTab.tabItem, Gui.VmAudioTab.tabItem, Gui.VmStorageContent.tabItem,
 		Gui.VmUsbTab.tabItem, Gui.VmUsbAttachTab.tabItem, Gui.VmSnapshotTab.tabItem, Gui.VmSharedFolderTab.tabItem)
-	Gui.VmInfoDetails = widget.NewAccordionItem(lang.X("details.vm_info", "VM - General"), Gui.VmInfoTabs)
+	Gui.VmInfoDetails = widget.NewAccordionItem(lang.X("details.vm_general", "VM - General"), Gui.VmInfoTabs)
 
 	for i := 0; i < NUMBER_OF_NICS; i++ {
 		Gui.VmNetworkTabs = append(Gui.VmNetworkTabs, NewNetworkTab(i))
