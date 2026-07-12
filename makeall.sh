@@ -175,7 +175,7 @@ for tag in ${TAGS} ; do
         mkdir -p dist/linux
         sudo mv -f "${PROGRAM_NAME}" dist/linux/"${PROGRAM_NAME}"${suffix}
         mv "${PROGRAM_NAME}".tar.xz dist/linux/"${PROGRAM_NAME}"${suffix}.tar.xz
-        fix_makefile dist/linux/"${PROGRAM_NAME}"${suffix}.tar.xz
+        # fix_makefile dist/linux/"${PROGRAM_NAME}"${suffix}.tar.xz
     fi
 
     if [[ ${ONLYAND} -eq 1 ]] ; then

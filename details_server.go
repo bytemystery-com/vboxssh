@@ -152,9 +152,11 @@ func NewSshServerTab() *ServerSshInfos {
 			srv.hostKeyList.Refresh()
 		}, Gui.MainWindow)
 		diaHost.SetView(dialog.ListView)
-		ms := Gui.MainWindow.Canvas().Size()
-		diaHost.Resize(fyne.NewSize(ms.Width*.8, ms.Height*.8))
-		diaHost.Show()
+		if Gui.IsDesktop {
+			ms := Gui.MainWindow.Canvas().Size()
+			diaHost.Resize(fyne.NewSize(ms.Width*.8, ms.Height*.8))
+			diaHost.Show()
+		}
 	})
 	toolItemDel := widget.NewToolbarAction(theme.ContentRemoveIcon(), func() {
 		if srv.selectedHostFileIndex >= 0 {
@@ -264,9 +266,11 @@ func (srv *ServerSshInfos) browseKeyFile() {
 	}
 
 	dia.SetView(dialog.ListView)
-	ms := Gui.MainWindow.Canvas().Size()
-	dia.Resize(fyne.NewSize(ms.Width*.8, ms.Height*.8))
-	dia.Show()
+	if Gui.IsDesktop {
+		ms := Gui.MainWindow.Canvas().Size()
+		dia.Resize(fyne.NewSize(ms.Width*.8, ms.Height*.8))
+		dia.Show()
+	}
 }
 
 func (srv *ServerSshInfos) add() {

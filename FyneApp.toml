@@ -4,11 +4,14 @@ Website = "https://github.com/bytemystery-com/vboxssh"
 Icon = "assets/icons/icon.png"
 Name = "VBoxSsh"
 ID = "com.bytemystery.vboxssh"
-Version = "0.3.0"
-Build = 182
+Version = "0.3.1"
+Build = 189
 
 [LinuxAndBSD]
 GenericName = "Virtualbox Frontend"
 Categories = ["System"]
 Comment = "Manage VirtualBox locally and over SSH"
 Keywords = ["virtualbox", "ssh", "frontend"]
+
+[Migrations]
+fyneDo = true

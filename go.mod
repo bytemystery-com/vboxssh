@@ -7,7 +7,7 @@ require (
 	github.com/bytemystery-com/colorlabel v1.0.17
 	github.com/bytemystery-com/picbutton v1.0.6
 	github.com/google/uuid v1.6.0
-	github.com/pkg/sftp v1.13.10
+	github.com/pkg/sftp v1.13.11
 	golang.org/x/crypto v0.54.0
 )
 
@@ -48,7 +48,7 @@ require (
 	github.com/tc-hib/winres v0.2.1 // indirect
 	github.com/urfave/cli/v2 v2.27.7 // indirect
 	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 // indirect
-	github.com/yuin/goldmark v1.8.2 // indirect
+	github.com/yuin/goldmark v1.8.4 // indirect
 	golang.org/x/image v0.44.0 // indirect
 	golang.org/x/net v0.57.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
