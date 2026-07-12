@@ -62,7 +62,7 @@ As user you have to choose the account on which VirtualBox runs e.g. vbox in my 
 #### Mac
 Not available - it could be build but requires Mac + SDK.
 #### Android 
-[APK](https://github.com/bytemystery-com/vboxssh/releases/download/v0.3.0/VBoxSsh.apk)  
+[APK](https://github.com/bytemystery-com/vboxssh/releases/download/v0.3.0/VBoxSsh_64.apk)  
 (tablet in landscape mode is recommended)
 
 ## Q & A
